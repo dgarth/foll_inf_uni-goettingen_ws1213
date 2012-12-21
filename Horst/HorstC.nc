@@ -11,15 +11,13 @@ module HorstC @safe()
 	uses interface Timer<TMilli> as Timer0;
 
     uses interface SplitControl as RadioControl;
-    uses interface SplitControl as SerialControl;
 
-    uses interface Packet as SerialPacket;
+	uses interface SendRssi;
+    uses interface SplitControl as SendRssiControl;
+
     uses interface Packet as RadioPacket;
 
-    uses interface AMPacket as SerialAMPacket;
     uses interface AMPacket as RadioAMPacket;
-
-    uses interface AMSend as SerialSend;
     uses interface AMSend as RadioSend;
 
     uses interface Receive as RadioReceive;
@@ -28,7 +26,7 @@ module HorstC @safe()
 
 implementation
 {
-    bool serial_busy = FALSE, radio_busy = FALSE;
+    bool rssi_busy = FALSE, radio_busy = FALSE;
 
     message_t serial_pkt, radio_pkt;
 
@@ -38,7 +36,7 @@ implementation
     {
 		call Leds.led0On();
 		call Leds.led1On();
-        call SerialControl.start();
+        call SendRssiControl.start();
         call RadioControl.start();
     } 
 
@@ -62,13 +60,10 @@ implementation
 		radio_busy = TRUE;
 	}
 
-    event void SerialSend.sendDone(message_t *msg, error_t error)
+    event void SendRssi.sendDone(error_t error)
     {
-        if (&serial_pkt == msg)
-        {
-            call Leds.led1Off();
-            serial_busy = FALSE;
-        }
+		call Leds.led1Off();
+		rssi_busy = FALSE;
     }
 
     event void RadioSend.sendDone(message_t *msg, error_t error)
@@ -84,7 +79,6 @@ implementation
     {
 		uint16_t rssi;
 		RadioMsg *inmsg;
-		SerialMsg *outmsg;
 
 		call Leds.led2Toggle();
 
@@ -93,36 +87,27 @@ implementation
 
 		rssi = call CC2420Packet.getRssi(msg);
 
-		if (serial_busy)
-			return msg;
-
-		outmsg = call SerialPacket.getPayload(&serial_pkt, sizeof (SerialMsg));
 		inmsg = call RadioPacket.getPayload(msg, sizeof(RadioMsg));
-		if (!outmsg)
+		if (!inmsg)
 			return msg;
 
-		outmsg->nodeid = inmsg->nodeid;
-		outmsg->count = inmsg->count;
-		outmsg->rssi = rssi;
-
-		if (call SerialSend.send(AM_BROADCAST_ADDR, &serial_pkt, sizeof(SerialMsg)) != SUCCESS)
-			return msg;
+		call SendRssi.send(AM_BROADCAST_ADDR, inmsg->nodeid, inmsg->count, rssi);
 
 		call Leds.led1On();
-		serial_busy = TRUE;
+		rssi_busy = TRUE;
         return msg;
     }
 
 
-    event void SerialControl.startDone(error_t err)
+    event void SendRssiControl.startDone(error_t err)
     {
         if (err == SUCCESS)
             call Leds.led0Off();
         else
-            call SerialControl.start();
+            call SendRssiControl.start();
     }
 
-    event void SerialControl.stopDone(error_t err)
+    event void SendRssiControl.stopDone(error_t err)
     {
     }
 

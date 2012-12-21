@@ -9,6 +9,8 @@ implementation
 
     components MainC, LedsC;
 
+	components SendRssiC;
+
 	components new TimerMilliC() as Timer0;
 
 	components ActiveMessageC as Radio;
@@ -28,11 +30,14 @@ implementation
 	App.Timer0 -> Timer0;
 
 	App.RadioControl -> Radio;
-	App.SerialControl -> Serial;
 
-	App.SerialSend -> SerialAMSenderC;
-	App.SerialPacket -> Serial;
-	App.SerialAMPacket -> Serial;
+	App.SendRssi -> SendRssiC;
+	App.SendRssiControl -> SendRssiC.SplitControl;
+
+	SendRssiC.SendingChannelControl -> Serial;
+	SendRssiC.Packet -> Serial;
+	SendRssiC.AMPacket -> Serial;
+	SendRssiC.AMSend -> SerialAMSenderC;
 
 	App.RadioSend -> AMSenderC;
 	App.RadioReceive -> AMReceiverC;

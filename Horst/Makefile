@@ -1,8 +1,8 @@
-BUILD_EXTRA_DEPS = SerialMsg.py
-CLEAN_EXTRA = SerialMsg.py
+BUILD_EXTRA_DEPS = RssiMsg.py
+CLEAN_EXTRA = RssiMsg.py
 
-SerialMsg.py: Horst.h
-	mig python -target=$(PLATFORM) -python-classname=SerialMsg $< SerialMsg -o $@
+RssiMsg.py: SendRssi.h
+	mig python -target=$(PLATFORM) -python-classname=RssiMsg $< RssiMsg -o $@
 
 
 COMPONENT=HorstAppC
