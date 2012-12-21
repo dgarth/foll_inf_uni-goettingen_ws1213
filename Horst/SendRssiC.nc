@@ -48,6 +48,11 @@ implementation
 		signal SendRssi.sendDone(error);
 	}
 
+	/* the following commands/events just forward starting and stopping to the
+	   wired SplitControl component. This ensures that SendRssiC is not used
+	   without wiring a SplitControl component to it.
+	 */
+
 	command error_t SplitControl.start()
 	{
 		return call SendingChannelControl.start();
