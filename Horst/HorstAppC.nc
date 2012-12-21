@@ -8,41 +8,31 @@ implementation
 	components HorstC as App;
 
     components MainC, LedsC;
-
-	components SendRssiC;
-
 	components new TimerMilliC() as Timer0;
+    App.Boot	-> MainC.Boot;
+    App.Leds	-> LedsC;
+	App.Timer0	-> Timer0;
 
 	components ActiveMessageC as Radio;
-    components SerialActiveMessageC as Serial;
-
-    components new SerialAMSenderC(AM_SERIALMSG);
-
     components new AMSenderC(AM_RADIOMSG);
     components new AMReceiverC(AM_RADIOMSG);
-
 	components CC2420PacketC;
+	App.RadioControl 	-> Radio;
+	App.RadioPacket 	-> Radio;
+	App.RadioAMPacket 	-> Radio;
+	App.RadioSend 		-> AMSenderC;
+	App.RadioReceive 	-> AMReceiverC;
+	App.CC2420Packet 	-> CC2420PacketC;
 
-    App.Boot -> MainC.Boot;
+	components SendRssiC;
+	App.SendRssi 		-> SendRssiC;
+	App.SendRssiControl -> SendRssiC;
 
-    App.Leds -> LedsC;
-
-	App.Timer0 -> Timer0;
-
-	App.RadioControl -> Radio;
-
-	App.SendRssi -> SendRssiC;
-	App.SendRssiControl -> SendRssiC.SplitControl;
-
-	SendRssiC.SendingChannelControl -> Serial;
-	SendRssiC.Packet -> Serial;
-	SendRssiC.AMPacket -> Serial;
-	SendRssiC.AMSend -> SerialAMSenderC;
-
-	App.RadioSend -> AMSenderC;
-	App.RadioReceive -> AMReceiverC;
-	App.RadioPacket -> Radio;
-	App.RadioAMPacket -> Radio;
-
-	App.CC2420Packet -> CC2420PacketC;
+	/* wire SendRssi so that it sends to the serial console */
+    components SerialActiveMessageC as RssiAM;
+    components new SerialAMSenderC(AM_RSSIMSG) as RssiAMSender;
+	SendRssiC.SendingChannelControl -> RssiAM;
+	SendRssiC.Packet 				-> RssiAM;
+	SendRssiC.AMPacket 				-> RssiAM;
+	SendRssiC.AMSend				-> RssiAMSender;
 }

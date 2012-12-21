@@ -5,31 +5,28 @@
 
 module HorstC @safe()
 {
-    uses interface Leds;
-    uses interface Boot;
+    uses
+	{
+		interface Leds;
+		interface Boot;
+		interface Timer<TMilli> as Timer0;
 
-	uses interface Timer<TMilli> as Timer0;
+		interface SplitControl as RadioControl;
+		interface Packet as RadioPacket;
+		interface AMPacket as RadioAMPacket;
+		interface AMSend as RadioSend;
+		interface Receive as RadioReceive;
+		interface CC2420Packet;
 
-    uses interface SplitControl as RadioControl;
-
-	uses interface SendRssi;
-    uses interface SplitControl as SendRssiControl;
-
-    uses interface Packet as RadioPacket;
-
-    uses interface AMPacket as RadioAMPacket;
-    uses interface AMSend as RadioSend;
-
-    uses interface Receive as RadioReceive;
-    uses interface CC2420Packet;
+		interface SendRssi;
+		interface SplitControl as SendRssiControl;
+	}
 }
 
 implementation
 {
     bool radio_busy = FALSE;
-
-    message_t serial_pkt, radio_pkt;
-
+    message_t radio_pkt;
 	uint16_t count = 0;
 
     event void Boot.booted(void)
@@ -90,7 +87,7 @@ implementation
 		if (!inmsg)
 			return msg;
 
-		if (call SendRssi.send(AM_BROADCAST_ADDR, inmsg->nodeid, inmsg->count, rssi) == SUCCESS)
+		if (call SendRssi.send(inmsg->nodeid, inmsg->count, rssi) == SUCCESS)
 			call Leds.led1On();
 
         return msg;
@@ -125,5 +122,4 @@ implementation
     event void RadioControl.stopDone(error_t err)
     {
     }
-
 }

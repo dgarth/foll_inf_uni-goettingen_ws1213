@@ -1,5 +1,4 @@
 #include "SendRssi.h"
-#include <AM.h>
 
 module SendRssiC
 {
@@ -22,7 +21,7 @@ implementation
 	bool busy = FALSE;
 	message_t pkt;
 
-	command error_t SendRssi.send(am_addr_t msg_dest, uint16_t source, uint16_t counter, uint16_t rssi)
+	command error_t SendRssi.send(uint16_t source, uint16_t counter, uint16_t rssi)
 	{
 		RssiMsg *msg;
 
@@ -37,7 +36,7 @@ implementation
 		msg->counter = counter;
 		msg->rssi = rssi;
 
-		return call AMSend.send(msg_dest, &pkt, sizeof *msg);
+		return call AMSend.send(SENDRSSI_DEST, &pkt, sizeof *msg);
 	}
 
 	event void AMSend.sendDone(message_t *msg, error_t error)
