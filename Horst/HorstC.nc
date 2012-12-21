@@ -26,7 +26,7 @@ module HorstC @safe()
 
 implementation
 {
-    bool rssi_busy = FALSE, radio_busy = FALSE;
+    bool radio_busy = FALSE;
 
     message_t serial_pkt, radio_pkt;
 
@@ -63,7 +63,6 @@ implementation
     event void SendRssi.sendDone(error_t error)
     {
 		call Leds.led1Off();
-		rssi_busy = FALSE;
     }
 
     event void RadioSend.sendDone(message_t *msg, error_t error)
@@ -91,10 +90,9 @@ implementation
 		if (!inmsg)
 			return msg;
 
-		call SendRssi.send(AM_BROADCAST_ADDR, inmsg->nodeid, inmsg->count, rssi);
+		if (call SendRssi.send(AM_BROADCAST_ADDR, inmsg->nodeid, inmsg->count, rssi) == SUCCESS)
+			call Leds.led1On();
 
-		call Leds.led1On();
-		rssi_busy = TRUE;
         return msg;
     }
 
