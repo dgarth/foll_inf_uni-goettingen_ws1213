@@ -9,27 +9,34 @@ from RssiMsg import RssiMsg
 
 RSSI_OFFSET = -45
 
+
 def get_val(data, name, fmt):
     m = RssiMsg()
-    off = getattr(m, "offset_" + name)()
-    size = getattr(m, "size_" + name)()
-    s = str(bytearray(data[off:off+size]))
+    start = getattr(m, "offset_" + name)()
+    end = start + getattr(m, "size_" + name)()
+    s = str(bytearray(data[start:end]))
     return struct.unpack(fmt, s)[0]
+
 
 def get_source(data):
     return get_val(data, "source", ">H")
 
+
 def get_destination(data):
     return get_val(data, "destination", ">H")
+
 
 def get_counter(data):
     return get_val(data, "counter", ">H")
 
+
 def get_rssi(data):
     return get_val(data, "rssi", ">h") - RSSI_OFFSET
 
+
 src = "serial@/dev/ttyUSB0:115200"
 am = tos.AM(tos.getSource(src))
+
 while True:
     p = am.read()
     data = p.data
