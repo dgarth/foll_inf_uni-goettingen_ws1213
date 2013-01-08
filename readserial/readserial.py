@@ -1,5 +1,8 @@
 #!/usr/bin/env python2
 
+# edit this if necessary
+src = 'serial@/dev/ttyUSB0:115200'
+
 import sys
 import os
 import struct
@@ -47,7 +50,6 @@ def get_rssi(data):
     return get_val(data, 'rssi', '>h') - RSSI_OFFSET
 
 
-src = 'serial@/dev/ttyUSB0:115200'
 am = tos.AM(tos.getSource(src))
 
 while True:
