@@ -20,7 +20,7 @@ implementation
 	components CollectionC;
 	App.RootControl -> CollectionC;
 	App.CollectionControl -> CollectionC;
-	App.CollectionReceive -> CollectionC.Receive[AM_COLLECT];
+	App.CollectionReceive -> CollectionC.Receive[COLLECT];
 
 	components SerialActiveMessageC as Serial;
 	components new SerialAMSenderC(AM_RSSIMSG) as SerialSend;

@@ -27,8 +27,13 @@ implementation
 
 	components CollectionC;
 	App.CollectionControl -> CollectionC;
-	components new CollectionSenderC(AM_COLLECT);
+	components new CollectionSenderC(COLLECT);
 	App.CollectionSend -> CollectionSenderC;
+
+	components DisseminationC;
+	App.DissControl -> DisseminationC;
+	components new DisseminatorC(struct settings, DISSEMINATE);
+	App.Settings -> DisseminatorC;
 	
 	components CC2420PacketC;
 	App.RssiPacket -> CC2420PacketC;
