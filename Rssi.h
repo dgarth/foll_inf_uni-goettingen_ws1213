@@ -5,10 +5,10 @@
 #define BEACON_PERIOD 2000
 enum { AM_BEACONMSG, AM_RSSIMSG, AM_COLLECT };
 
-#define LED_COLLECT 0
+#define LED_COLLECT LEDS_LED0
 #define LED_SERIAL  LED_COLLECT
-#define LED_BEACON  1
-#define LED_RCV     2
+#define LED_BEACON  LEDS_LED1
+#define LED_RCV     LEDS_LED2
 
 
 /* struct definitions */
@@ -29,9 +29,9 @@ typedef nx_struct RssiMsg
 
 
 /* "nicer" interface for controlling LEDs */
-#define LEDCMD(n, cmd) call Leds.led ## n ## cmd()
-#define led_on(n) LEDCMD(n, On)
-#define led_off(n) LEDCMD(n, Off)
-#define led_toggle(n) LEDCMD(n, Toggle)
+#define LEDCMD(cmd) call Leds.set(call Leds.get() cmd)
+#define led_on(n) LEDCMD(| (n))
+#define led_off(n) LEDCMD(& ~(n))
+#define led_toggle(n) LEDCMD(^ (n))
 
 #endif
