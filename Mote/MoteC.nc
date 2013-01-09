@@ -64,7 +64,7 @@ implementation
 			return msg;
 		}
 
-		led_on(LED_RCV);
+		led_toggle(LED_RCV);
 
 		outmsg = call CollectionSend.getPayload(&collect_pkt, sizeof *outmsg);
 		if (!outmsg) {
