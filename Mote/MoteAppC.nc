@@ -25,6 +25,8 @@ implementation
 	App.BeaconSend -> AMSenderC;
 	App.BeaconReceive -> AMReceiverC;
 
+	components CollectionC;
+	App.CollectionControl -> CollectionC;
 	components new CollectionSenderC(AM_COLLECT);
 	App.CollectionSend -> CollectionSenderC;
 	

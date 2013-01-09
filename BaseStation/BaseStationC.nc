@@ -11,6 +11,7 @@ module BaseStationC
 		interface SplitControl as RadioControl;
 
 		interface RootControl;
+		interface StdControl as CollectionControl;
 		interface Receive as CollectionReceive;
 
 		interface SplitControl as SerialControl;
@@ -50,6 +51,7 @@ implementation
 
 		led_toggle(LED_RCV);
 
+
 		/* get pointer to outgoing packet payload */
 		outmsg = call SerialSend.getPayload(&serial_pkt, sizeof *outmsg);
 		if (!outmsg) {
@@ -71,6 +73,7 @@ implementation
     event void RadioControl.startDone(error_t err)
     {
         if (err == SUCCESS) {
+			call CollectionControl.start();
 			call RootControl.setRoot();
         }
         else {

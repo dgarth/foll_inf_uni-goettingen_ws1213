@@ -19,6 +19,7 @@ implementation
 
 	components CollectionC;
 	App.RootControl -> CollectionC;
+	App.CollectionControl -> CollectionC;
 	App.CollectionReceive -> CollectionC.Receive[AM_COLLECT];
 
 	components SerialActiveMessageC as Serial;

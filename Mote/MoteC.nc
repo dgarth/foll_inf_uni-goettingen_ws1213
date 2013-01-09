@@ -18,6 +18,7 @@ module MoteC
 
 		interface CC2420Packet as RssiPacket;
 
+		interface StdControl as CollectionControl;
 		interface Send as CollectionSend;
 	}
 }
@@ -42,6 +43,7 @@ implementation
     event void RadioControl.startDone(error_t err)
     {
         if (err == SUCCESS) {
+			call CollectionControl.start();
 			call BeaconTimer.startPeriodic(BEACON_PERIOD);
         }
         else {
@@ -58,11 +60,11 @@ implementation
 		BeaconMsg *inmsg = payload;
 		RssiMsg *outmsg;
 
-		led_toggle(LED_RCV);
-
         if (collect_busy || len != sizeof *inmsg) {
 			return msg;
 		}
+
+		led_on(LED_RCV);
 
 		outmsg = call CollectionSend.getPayload(&collect_pkt, sizeof *outmsg);
 		if (!outmsg) {
