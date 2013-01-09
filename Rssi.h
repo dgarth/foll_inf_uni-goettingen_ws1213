@@ -12,20 +12,21 @@ enum { AM_BEACONMSG, AM_RSSIMSG, AM_COLLECT };
 
 
 /* struct definitions */
-typedef nx_struct BeaconMsg
+nx_struct BeaconMsg
 {
     nx_uint16_t nodeid;
     nx_uint16_t counter;
-} BeaconMsg;
+};
 
-typedef nx_struct RssiMsg
+nx_struct RssiMsg
 {
     nx_uint16_t
         source,
         destination,
+        series,
         counter,
         rssi;
-} RssiMsg;
+};
 
 
 /* "nicer" interface for controlling LEDs */

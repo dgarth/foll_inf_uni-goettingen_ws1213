@@ -39,7 +39,7 @@ implementation
     }
     event message_t *CollectionReceive.receive(message_t *msg, void *payload, uint8_t len)
     {
-		RssiMsg
+		nx_struct RssiMsg
 			*inmsg = payload,
 			*outmsg;
 

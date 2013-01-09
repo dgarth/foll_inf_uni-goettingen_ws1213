@@ -57,8 +57,8 @@ implementation
 
     event message_t *BeaconReceive.receive(message_t *msg, void *payload, uint8_t len)
     {
-		BeaconMsg *inmsg = payload;
-		RssiMsg *outmsg;
+		nx_struct BeaconMsg *inmsg = payload;
+		nx_struct RssiMsg *outmsg;
 
         if (collect_busy || len != sizeof *inmsg) {
 			return msg;
@@ -92,7 +92,7 @@ implementation
 
 	event void BeaconTimer.fired(void)
 	{
-		BeaconMsg *outmsg;
+		nx_struct BeaconMsg *outmsg;
 
 		outmsg = call BeaconSend.getPayload(&beacon_pkt, sizeof *outmsg);
 		if (!outmsg || beacon_busy) {
