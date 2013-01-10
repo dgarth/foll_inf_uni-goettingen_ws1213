@@ -16,12 +16,12 @@ Desweiteren gibt es ein paar Nicht-Ganz-Standard Steuerzeichen, die es versteht:
 
 ### Kommandotabelle
 
-    > HEX		| DEC	| ASCII	| COMMAND
-    >-------------------------------------------------------------------------------------
-    > 0x07		|  7	| BEL	| "Piiiieeep!"
-    > 0x11		| 17	| DC1	| LED 1 togglen
-    > 0x12		| 18	| DC2	| LED 2 togglen
-    > 0x13		| 19	| DC3	| Zeile 1 loeschen und Cursor auf ihre 1. Stelle
-    > 0x14		| 20	| DC4	| Zeile 2 loeschen und Cursor auf ihre 1. Stelle
-    > 0x20-0x7E		| 32-126| char	| Druckbares Zeichen dieses Wertes an Cursorstelle
-    >			|	|	| drucken und Cursor 1 nach rechts
+	 HEX		| DEC	| ASCII	| COMMAND
+	-------------------------------------------------------------------------------------
+	 0x07		|  7	| BEL	| "Piiiieeep!"
+	 0x11		| 17	| DC1	| LED 1 togglen
+	 0x12		| 18	| DC2	| LED 2 togglen
+	 0x13		| 19	| DC3	| Zeile 1 loeschen und Cursor auf ihre 1. Stelle
+	 0x14		| 20	| DC4	| Zeile 2 loeschen und Cursor auf ihre 1. Stelle
+	 0x20-0x7E	| 32-126| char	| Druckbares Zeichen dieses Wertes an Cursorstelle
+	 		| 	| 	| drucken und Cursor 1 nach rechts
