@@ -17,11 +17,33 @@ Desweiteren gibt es ein paar Nicht-Ganz-Standard Steuerzeichen, die es versteht:
 ### Kommandotabelle
 
 	 HEX		| DEC	| ASCII	| COMMAND
-	-------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------
 	 0x07		|  7	| BEL	| "Piiiieeep!"
 	 0x11		| 17	| DC1	| LED 1 togglen
 	 0x12		| 18	| DC2	| LED 2 togglen
 	 0x13		| 19	| DC3	| Zeile 1 loeschen und Cursor auf ihre 1. Stelle
 	 0x14		| 20	| DC4	| Zeile 2 loeschen und Cursor auf ihre 1. Stelle
-	 0x20-0x7E	| 32-126| char	| Druckbares Zeichen dieses Wertes an Cursorstelle
-	 		| 	| 	| drucken und Cursor 1 nach rechts
+	 0x20-0x7E	| 32-126| char	| Druckbares Zeichen dieses Wertes an Cursorstelle drucken und Cursor 1 nach rechts
+
+### Knoepfe
+
+Das LCD-Board hat 2 Tastknoepfe, die bei Betaetigung die Zeichen 0x11 bzw. 0x12 an die Mote schicken.
+
+### Auf den Motes
+
+Die Motes schliesst man per Erweiterungsboard mit seriellem Kabel an das LCD-Board an.
+
+Zum Senden und Empfangen ueber den seriellen Port (UART) gibt es das Interface UartStream.
+
+Als Beispiel fuer Initialisierung, Senden/Empfangen & Wiring wuerde ich auf TestRssi verweisen.
+Zusammengeklaut habe ich mir das vom Programm "TestEX1000UART" vom Hersteller unserer Motes.
+
+Wichtig fuer uns ist, den UART wieder zu releasen, nachdem man ihn requested hat, da er ueber den selben
+Port vom MCU angesteuert wird, wie der Funktransmitter, d.h. solange der UART von uns belegt wird, kann
+man den CC2420 nicht ansteuern --> Funkstille. In TestEX1000UART wird das nicht gemacht, was mir ein wenig
+Frustration bescherte.
+
+### Known Bugs :P
+ 
+ * Das LCD interpretiert das Nullzeichen momentan noch als vertikalen Balken. Ist nur ein aesthetisches
+   Problem, werde ich noch aendern...
