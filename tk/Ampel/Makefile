@@ -1,0 +1,3 @@
+COMPONENT=AmpelAppC
+include $(MAKERULES)
+

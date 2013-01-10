@@ -1,0 +1,29 @@
+Liste von Komponenten und wofür sie gut sind:
+
+MainC: Stellt das Event Boot.booted() bereit.
+
+PrintfC: Der Name ist Programm.
+SerialStartC: Startet den Serial-Port beim booten.
+TimerMilliC: Timer, genauigkeit in Millisekunden.
+
+AMSenderC:
+Abstraktion zum Senden von Nachrichten.
+Bietet u.a. AMSend, AMPacket und Packet.
+
+AMReceiverC:
+Abstraktion zum Empfangen von Nachrichten.
+Bietet u.a. das Interface "Receiver".
+
+CC2420ActiveMessageC:
+Implementierung der ActiveMessage-Abstraktion.
+Bietet SplitControl (zum Hochfahren des RF-Chips) und
+PacketAcknowledgements (zum Senden und Empfangen von Acks).
+Hier ist alles implementiert, was spezifisch für den Chip
+TI 2420 ist.
+
+SerialActiveMessageC:
+Implementierung der ActiveMessage-Abstraktion zur
+Kommunikation über den seriellen Port. Die Aufrufe
+gehen dann über die Komponenten SerialAMSenderC und
+SerialAMReceiverC.
+
