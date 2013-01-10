@@ -6,39 +6,39 @@
 module MoteC
 {
     uses
-	{
-		interface Boot;
-		interface Leds;
+    {
+        interface Boot;
+        interface Leds;
 
-		interface SplitControl as RadioControl;
+        interface SplitControl as RadioControl;
 
-		interface Timer<TMilli> as BeaconTimer;
-		interface AMSend as BeaconSend;
-		interface Receive as BeaconReceive;
+        interface Timer<TMilli> as BeaconTimer;
+        interface AMSend as BeaconSend;
+        interface Receive as BeaconReceive;
 
-		interface CC2420Packet as RssiPacket;
+        interface CC2420Packet as RssiPacket;
 
-		interface StdControl as CollectionControl;
-		interface Send as CollectionSend;
+        interface StdControl as CollectionControl;
+        interface Send as CollectionSend;
 
-		interface StdControl as DissControl;
-		interface DisseminationValue<nx_struct Settings> as Settings;
-	}
+        interface StdControl as DissControl;
+        interface DisseminationValue<nx_struct Settings> as Settings;
+    }
 }
 
 implementation
 {
-	nx_struct Settings settings = SETTINGS_DEFAULT;
+    nx_struct Settings settings = SETTINGS_DEFAULT;
 
     bool
-		beacon_busy = FALSE,
-		collect_busy = FALSE;
+        beacon_busy=FALSE,
+        collect_busy=FALSE;
 
     message_t
-		beacon_pkt,
-		collect_pkt;
+        beacon_pkt,
+        collect_pkt;
 
-	uint16_t counter;
+    uint16_t counter;
 
     event void Boot.booted(void)
     {
@@ -48,9 +48,9 @@ implementation
     event void RadioControl.startDone(error_t err)
     {
         if (err == SUCCESS) {
-			call CollectionControl.start();
-			call DissControl.start();
-			call BeaconTimer.startPeriodic(BEACON_PERIOD);
+            call CollectionControl.start();
+            call DissControl.start();
+            call BeaconTimer.startPeriodic(BEACON_PERIOD);
         }
         else {
             call RadioControl.start();
@@ -63,75 +63,75 @@ implementation
 
     event message_t *BeaconReceive.receive(message_t *msg, void *payload, uint8_t len)
     {
-		nx_struct BeaconMsg *inmsg = payload;
-		nx_struct RssiMsg *outmsg;
+        nx_struct BeaconMsg *inmsg = payload;
+        nx_struct RssiMsg *outmsg;
 
         if (collect_busy || len != sizeof *inmsg) {
-			return msg;
-		}
+            return msg;
+        }
 
-		led_toggle(LED_RCV);
+        led_toggle(LED_RCV);
 
-		outmsg = call CollectionSend.getPayload(&collect_pkt, sizeof *outmsg);
-		if (!outmsg) {
-			return msg;
-		}
+        outmsg = call CollectionSend.getPayload(&collect_pkt, sizeof *outmsg);
+        if (!outmsg) {
+            return msg;
+        }
 
-		outmsg->source = inmsg->nodeid;
-		outmsg->destination = TOS_NODE_ID;
-		outmsg->counter = inmsg->counter;
-		outmsg->rssi = GETRSSI(msg);
+        outmsg->source = inmsg->nodeid;
+        outmsg->destination = TOS_NODE_ID;
+        outmsg->counter = inmsg->counter;
+        outmsg->rssi = GETRSSI(msg);
 
-		if (call CollectionSend.send(&collect_pkt, sizeof *outmsg) == SUCCESS) {
-			led_on(LED_COLLECT);
-			collect_busy = TRUE;
-		}
+        if (call CollectionSend.send(&collect_pkt, sizeof *outmsg) == SUCCESS) {
+            led_on(LED_COLLECT);
+            collect_busy = TRUE;
+        }
 
         return msg;
     }
-	
-	event void CollectionSend.sendDone(message_t *msg, error_t error)
-	{
-		led_off(LED_COLLECT);
-		collect_busy = FALSE;
-	}
 
-	event void BeaconTimer.fired(void)
-	{
-		nx_struct BeaconMsg *outmsg;
+    event void CollectionSend.sendDone(message_t *msg, error_t error)
+    {
+        led_off(LED_COLLECT);
+        collect_busy = FALSE;
+    }
 
-		outmsg = call BeaconSend.getPayload(&beacon_pkt, sizeof *outmsg);
-		if (!outmsg || beacon_busy) {
-			return;
-		}
+    event void BeaconTimer.fired(void)
+    {
+        nx_struct BeaconMsg *outmsg;
 
-		outmsg->counter = counter++;
-		outmsg->nodeid = TOS_NODE_ID;
+        outmsg = call BeaconSend.getPayload(&beacon_pkt, sizeof *outmsg);
+        if (!outmsg || beacon_busy) {
+            return;
+        }
 
-		if (call BeaconSend.send(AM_BROADCAST_ADDR, &beacon_pkt, sizeof *outmsg) == SUCCESS) {
-			led_on(LED_BEACON);
-			beacon_busy = TRUE;
-		}
-	}
+        outmsg->counter = counter++;
+        outmsg->nodeid = TOS_NODE_ID;
 
-	event void BeaconSend.sendDone(message_t *msg, error_t error)
-	{
-		if (msg == &beacon_pkt) {
-			led_off(LED_BEACON);
-			beacon_busy = FALSE;
-		}
-	}
+        if (call BeaconSend.send(AM_BROADCAST_ADDR, &beacon_pkt, sizeof *outmsg) == SUCCESS) {
+            led_on(LED_BEACON);
+            beacon_busy = TRUE;
+        }
+    }
 
-	event void Settings.changed()
-	{
-		const nx_struct Settings *s = call Settings.get();
-		settings = *s;
+    event void BeaconSend.sendDone(message_t *msg, error_t error)
+    {
+        if (msg == &beacon_pkt) {
+            led_off(LED_BEACON);
+            beacon_busy = FALSE;
+        }
+    }
 
-		if (settings.series) {
-			call BeaconTimer.startPeriodic(BEACON_PERIOD);
-		}
-		else {
-			call BeaconTimer.stop();
-		}
-	}
+    event void Settings.changed()
+    {
+        const nx_struct Settings *s = call Settings.get();
+        settings = *s;
+
+        if (settings.series) {
+            call BeaconTimer.startPeriodic(BEACON_PERIOD);
+        }
+        else {
+            call BeaconTimer.stop();
+        }
+    }
 }
