@@ -22,13 +22,14 @@ module MoteC
 		interface Send as CollectionSend;
 
 		interface StdControl as DissControl;
-		interface DisseminationValue<struct settings> as Settings;
+		interface DisseminationValue<nx_struct Settings> as Settings;
 	}
 }
 
 implementation
 {
-	nx_struct settings settings = { .series = 1 };
+	nx_struct Settings settings = SETTINGS_DEFAULT;
+
     bool
 		beacon_busy = FALSE,
 		collect_busy = FALSE;
@@ -123,7 +124,7 @@ implementation
 
 	event void Settings.changed()
 	{
-		const nx_struct settings *s = call Settings.get();
+		const nx_struct Settings *s = call Settings.get();
 		settings = *s;
 
 		if (settings.series) {

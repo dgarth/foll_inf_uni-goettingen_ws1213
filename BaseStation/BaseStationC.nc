@@ -14,6 +14,9 @@ module BaseStationC
 		interface StdControl as CollectionControl;
 		interface Receive as CollectionReceive;
 
+		interface StdControl as DissControl;
+		interface DisseminationUpdate<nx_struct Settings> as Settings;
+
 		interface SplitControl as SerialControl;
 		interface AMSend as SerialSend;
 	}
@@ -21,6 +24,7 @@ module BaseStationC
 
 implementation
 {
+	nx_struct Settings settings = SETTINGS_DEFAULT;
     bool serial_busy = FALSE;
     message_t serial_pkt;
 
@@ -37,6 +41,7 @@ implementation
 			serial_busy = FALSE;
 		}
     }
+
     event message_t *CollectionReceive.receive(message_t *msg, void *payload, uint8_t len)
     {
 		nx_struct RssiMsg
@@ -74,6 +79,7 @@ implementation
     {
         if (err == SUCCESS) {
 			call CollectionControl.start();
+			call DissControl.start();
 			call RootControl.setRoot();
         }
         else {
@@ -84,7 +90,6 @@ implementation
     event void RadioControl.stopDone(error_t err)
     {
     }
-
 
     event void SerialControl.startDone(error_t err)
     {
@@ -98,4 +103,18 @@ implementation
     event void SerialControl.stopDone(error_t err)
     {
     }
+
+	void next(void)
+	{
+		if (!++settings.series)
+			settings.series = 1;
+		call Settings.change(&settings);
+	}
+
+	void pause(void)
+	{
+		nx_struct Settings s = settings;
+		s.series = 0;
+		call Settings.change(&s);
+	}
 }

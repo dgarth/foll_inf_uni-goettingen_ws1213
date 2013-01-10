@@ -32,7 +32,7 @@ implementation
 
 	components DisseminationC;
 	App.DissControl -> DisseminationC;
-	components new DisseminatorC(struct settings, DISSEMINATE);
+	components new DisseminatorC(nx_struct Settings, DISSEMINATE);
 	App.Settings -> DisseminatorC;
 	
 	components CC2420PacketC;

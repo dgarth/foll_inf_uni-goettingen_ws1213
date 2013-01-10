@@ -29,10 +29,13 @@ nx_struct RssiMsg
 };
 
 
-nx_struct settings {
+nx_struct Settings
+{
     nx_uint16_t
         series;
 };
+
+#define SETTINGS_DEFAULT { .series = 1 }
 
 
 /* "nicer" interface for controlling LEDs */
