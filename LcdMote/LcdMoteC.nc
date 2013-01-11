@@ -1,13 +1,13 @@
 #include <string.h>
 
 module LcdMoteC
-{	
-	uses {
+{
+    uses {
         interface Boot;
         interface Leds;
-		interface Timer<TMilli>;
+        interface Timer<TMilli>;
         interface LcdDisp;
-	}
+    }
 }
 
 implementation
