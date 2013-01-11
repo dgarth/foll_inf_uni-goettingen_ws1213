@@ -25,7 +25,7 @@ implementation {
         lines[2 * (LEN + 1)],
         *line1 = lines + 1,
         *line2 = lines + 1 + LEN;
-
+    
 
     event void Boot.booted(void)
     {
@@ -40,19 +40,26 @@ implementation {
 	/* Wenn wir den UART haben: */
 	event void Resource.granted() {
         if (printing) {
-            printing = FALSE;
             call UartStream.send(lines, sizeof lines); //unseren vorher aufbereiteten String senden
-        }
-        else {
-            uint8_t nop[] = { 0x16 };
+        } else {
+
+        	uint8_t nop[] = { 0x16 };
+        	call UartStream.enableReceiveInterrupt(); //<= das hier war das Hauptproblem
             call UartStream.send(nop, sizeof nop);
         }
 	}
 	
+	/* Wenn wir fertig geschrieben haben, geben wir den UART frei, bei Taster-Abfrage *
+	 * erst, wenn wir empfangen haben.												  */
 	async event void UartStream.sendDone(uint8_t *buf, uint16_t len, error_t error) {
+		if(printing) {
+			requested = FALSE;
+			call Resource.release();
+			printing = FALSE;
+		}
 	}
 	
-    /* klappt nicht ?! */
+    /* klappt jetzt! */
 	async event void UartStream.receivedByte(uint8_t byte) {
         if (byte == 0x11) {
             signal LcdDisp.button1Pressed();
@@ -60,8 +67,7 @@ implementation {
         if (byte == 0x12) {
             signal LcdDisp.button2Pressed();
         }
-        signal LcdDisp.button2Pressed();
-
+        call UartStream.disableReceiveInterrupt();	//Nach empfang, UART freigeben
         requested = FALSE;
         call Resource.release();
 	}
@@ -84,6 +90,7 @@ implementation {
             memcpy(line2, s2, strlen(s2));
 
         printing = TRUE;
+        requested = TRUE;
 		call Resource.request();
     }
 	

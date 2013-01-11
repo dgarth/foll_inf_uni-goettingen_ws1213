@@ -27,7 +27,7 @@ implementation
 
     event void LcdDisp.button2Pressed(void)
     {
-        call Leds.led0Toggle();
+        call Leds.led1Toggle();
     }
 
     event void Timer.fired(void)
