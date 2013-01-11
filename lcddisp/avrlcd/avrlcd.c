@@ -10,12 +10,13 @@
 #define GREEN 0x02
 #define RED 0x01
 #ifndef F_CPU
-	#define F_CPU 1000000UL
+	#define F_CPU 1000000UL	//Der AVR ist mit 1MHz getaktet
 #endif
 #define UART_BAUD_RATE      4800
 
+unsigned char button = 0;
 
-
+/* Aus-/Eingänge, LCD-Controllerchip und UART initialisieren */
 void init_all(void) {
 	DDRC |= _BV(PC5) | _BV(PC4) | _BV(PC3);
 	DDRD |= _BV(PD4);
@@ -25,37 +26,38 @@ void init_all(void) {
 	PORTC &= ~_BV(PC3);
 	PORTC |= _BV(PC4) | _BV(PC5);
 	
-	
 	PORTC |= _BV(PC3); //BEEP!
 	_delay_ms(100);
 	lcd_init();
+	
+	/*UART-Einstellen, nach Atmel Datenblatt*/
 	uart_init( UART_BAUD_SELECT(UART_BAUD_RATE,F_CPU) );
 	
 	GICR |= (1<<INT0) | (1<<INT1);
 	MCUCR |=(0<<ISC01) | (0<<ISC00) | (0<<ISC11) | (0<<ISC10);
 	
 	sei();
-	PORTC &= ~_BV(PC3);
+	PORTC &= ~_BV(PC3);	//Beep-Ende
 }
 
+/* Den FlipFlop, an dem die Taster haengen, resetten */
 void clear_buttons(void) {
-	//uint8_t buttonmask = ((~PIND) & (_BV(PD2) | _BV(PD3)))>>2;
 	PORTD &= ~_BV(PD4);
-
 	PORTD |= _BV(PD4);
-	
-	//return buttonmask;
 }
 
+/* LED-Status setzen. Bsp.: setLeds(GREEN | RED); => Beide LEDs an */
 void setLeds(uint8_t mask) {
 	mask = (~(mask<<4)) & (_BV(PC5) | _BV(PC4));
 	PORTC = (PORTC & ~_BV(PC5) & ~_BV(PC4)) | mask;
 }
 
+/* LED-Status abfragen, mask entsprechen setLeds */
 uint8_t getLeds(void) {
 	return (~PORTC & (_BV(PC5) | _BV(PC4)))>>4;
 }
 
+/* Eine Viertelsekunde Piepen */
 void beep(void) {
 	PORTC |= _BV(PC3); //BEEP!
 	_delay_ms(250);
@@ -63,18 +65,17 @@ void beep(void) {
 }
 	
 
-
+/* Interrupt-Routine fuer Button 2 */
 ISR (INT0_vect) {
-    uart_putc(0x12); //DC2 senden
-    //setLeds(getLeds() ^ GREEN);
+    button = 0x12;
   	_delay_ms(300);
     clear_buttons();
     
 } 
 
+/* Interrupt-Routine fuer Button 1 */
 ISR (INT1_vect) {
-    uart_putc(0x11); //DC1 senden
-    //setLeds(getLeds() ^ RED); 
+    button = 0x11;
 	_delay_ms(300);
     clear_buttons();
 } 
@@ -134,6 +135,12 @@ int main(void) {
              */
             c = (unsigned char) b;
             switch(c) {
+            	case 0x16:
+            		uart_putc(button);
+            		button = 0;
+            	break;
+            	case 0x00:
+            	break;
             	case 0x07: //BELL
             		beep(); //BEEP!!!
             	break;

@@ -5,13 +5,14 @@
 #include <util/delay.h>
 #include "lcd.h"
 
-
+/* Chip Select, wenn Daten gesetzt */
 void lcd_enable( void ) {
     PORTC |= _BV(PC2);     // Enable auf 1 setzen
     _delay_us( 20 );  // kurze Pause
     PORTC &= ~_BV(PC2);    // Enable auf 0 setzen
 }
 
+/* LCD-Controller KS0070 initialisieren im 8-Bit Parallelmodus, nach Datenblatt */
 void lcd_init(void) {
 	DDRB = 0xFF;
 	DDRC |= _BV(PC2) | _BV(PC1) | _BV(PC0);
@@ -49,12 +50,14 @@ void lcd_init(void) {
     lcd_enable();
 }
 
+/* Chip zuruecksetzen */
 void lcd_clear(void) {
 	PORTB = 0x01;
 	lcd_enable();
 	_delay_ms(2);
 }
 
+/* Cursor an Speicherstelle pos setzen */
 void lcd_setCursor(uint8_t pos) {
 	pos &= 0b01111111;
 	PORTB = 0x80 | pos;
@@ -62,7 +65,8 @@ void lcd_setCursor(uint8_t pos) {
 	_delay_us(50);
 }
 
-
+/* ein Zeichen an aktuelle Cursorstelle schreiben,	*
+ * Cursor wird automatisch inkrementiert.			*/
 void lcd_putc(char c) {
 	PORTC |=  _BV(PC0);
 	PORTB = c;
@@ -71,6 +75,8 @@ void lcd_putc(char c) {
 	PORTC &=  ~_BV(PC0);
 }
 
+/* angegebene Zeile mit Spaces ueberschreiben und Cursor	*
+ * auf ihren Anfang setzen									*/
 void lcd_clearLine(uint8_t line) {
 	uint8_t i;
 	if((line == FIRST) || (line == SECOND)) {
@@ -82,7 +88,7 @@ void lcd_clearLine(uint8_t line) {
 			lcd_clear();
 }
 
-
+/* Einen String auf den LCD schreiben */
 void lcd_puts(const char *s, uint8_t line) {
 	lcd_clearLine(line);
 	while(*s != '\0')
