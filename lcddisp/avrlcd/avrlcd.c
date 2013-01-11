@@ -14,6 +14,8 @@
 #endif
 #define UART_BAUD_RATE      4800
 
+unsigned char button = 0;
+
 /* Aus-/Eingänge, LCD-Controllerchip und UART initialisieren */
 void init_all(void) {
 	DDRC |= _BV(PC5) | _BV(PC4) | _BV(PC3);
@@ -65,7 +67,7 @@ void beep(void) {
 
 /* Interrupt-Routine fuer Button 2 */
 ISR (INT0_vect) {
-    uart_putc(0x12); //DC2 senden
+    button = 0x12;
   	_delay_ms(300);
     clear_buttons();
     
@@ -73,7 +75,7 @@ ISR (INT0_vect) {
 
 /* Interrupt-Routine fuer Button 1 */
 ISR (INT1_vect) {
-    uart_putc(0x11); //DC1 senden 
+    button = 0x11;
 	_delay_ms(300);
     clear_buttons();
 } 
@@ -133,6 +135,12 @@ int main(void) {
              */
             c = (unsigned char) b;
             switch(c) {
+            	case 0x16:
+            		uart_putc(button);
+            		button = 0;
+            	break;
+            	case 0x00:
+            	break;
             	case 0x07: //BELL
             		beep(); //BEEP!!!
             	break;
