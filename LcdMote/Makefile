@@ -1,0 +1,2 @@
+COMPONENT=LcdMoteAppC
+include $(MAKERULES)
