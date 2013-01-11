@@ -20,30 +20,36 @@ module MoteC
 
         interface StdControl as CollectionControl;
         interface Send as CollectionSend;
+
+        interface StdControl as DissControl;
+        interface DisseminationValue<nx_struct Settings> as Settings;
     }
 }
 
 implementation
 {
+    nx_struct Settings settings = SETTINGS_DEFAULT;
+
     bool
-        beacon_busy = FALSE,
-        collect_busy = FALSE;
+        beacon_busy=FALSE,
+        collect_busy=FALSE;
 
     message_t
         beacon_pkt,
         collect_pkt;
 
-    uint16_t counter;
+    uint16_t counter = 1;
 
     event void Boot.booted(void)
     {
         call RadioControl.start();
-    } 
+    }
 
     event void RadioControl.startDone(error_t err)
     {
         if (err == SUCCESS) {
             call CollectionControl.start();
+            call DissControl.start();
             call BeaconTimer.startPeriodic(BEACON_PERIOD);
         }
         else {
@@ -73,6 +79,7 @@ implementation
 
         outmsg->source = inmsg->nodeid;
         outmsg->destination = TOS_NODE_ID;
+        outmsg->series = settings.series;
         outmsg->counter = inmsg->counter;
         outmsg->rssi = GETRSSI(msg);
 
@@ -113,6 +120,20 @@ implementation
         if (msg == &beacon_pkt) {
             led_off(LED_BEACON);
             beacon_busy = FALSE;
+        }
+    }
+
+    event void Settings.changed()
+    {
+        const nx_struct Settings *s = call Settings.get();
+        settings = *s;
+
+        if (settings.series) {
+            counter = 1;
+            call BeaconTimer.startPeriodic(BEACON_PERIOD);
+        }
+        else {
+            call BeaconTimer.stop();
         }
     }
 }

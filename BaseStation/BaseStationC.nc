@@ -14,21 +14,46 @@ module BaseStationC
         interface StdControl as CollectionControl;
         interface Receive as CollectionReceive;
 
+        interface StdControl as DissControl;
+        interface DisseminationUpdate<nx_struct Settings> as Settings;
+
         interface SplitControl as SerialControl;
         interface AMSend as SerialSend;
+
+        interface Timer<TMilli>;
     }
 }
 
 implementation
 {
+    nx_struct Settings settings = SETTINGS_DEFAULT;
+
     bool serial_busy = FALSE;
+
     message_t serial_pkt;
+
+    void next(void)
+    {
+        settings.series++;
+        if (!settings.series)
+            settings.series = 1;
+        led_on(LED_BEACON);
+        call Settings.change(&settings);
+    }
+
+    void pause(void)
+    {
+        nx_struct Settings s = settings;
+        s.series = 0;
+        led_off(LED_BEACON);
+        call Settings.change(&s);
+    }
 
     event void Boot.booted(void)
     {
         call RadioControl.start();
         call SerialControl.start();
-    } 
+    }
 
     event void SerialSend.sendDone(message_t *msg, error_t error)
     {
@@ -66,6 +91,11 @@ implementation
             serial_busy = TRUE;
         }
 
+        if (inmsg->counter >= 10) {
+            pause();
+            call Timer.startOneShot(5000);
+        }
+
         return msg;
     }
 
@@ -73,7 +103,9 @@ implementation
     {
         if (err == SUCCESS) {
             call CollectionControl.start();
+            call DissControl.start();
             call RootControl.setRoot();
+            next();
         }
         else {
             call RadioControl.start();
@@ -95,5 +127,10 @@ implementation
 
     event void SerialControl.stopDone(error_t err)
     {
+    }
+
+    event void Timer.fired(void)
+    {
+        next();
     }
 }

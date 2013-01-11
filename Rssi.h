@@ -3,7 +3,7 @@
 
 /* some constants */
 #define BEACON_PERIOD 2000
-enum { AM_BEACONMSG, AM_RSSIMSG, AM_COLLECT };
+enum { AM_BEACONMSG, AM_RSSIMSG, COLLECT, DISSEMINATE };
 
 #define LED_COLLECT LEDS_LED0
 #define LED_SERIAL  LED_COLLECT
@@ -27,6 +27,15 @@ nx_struct RssiMsg
         counter,
         rssi;
 };
+
+
+nx_struct Settings
+{
+    nx_uint16_t
+        series;
+};
+
+#define SETTINGS_DEFAULT { .series = 0 }
 
 
 /* "nicer" interface for controlling LEDs */
