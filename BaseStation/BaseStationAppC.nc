@@ -31,4 +31,7 @@ implementation
     components new SerialAMSenderC(AM_RSSIMSG) as SerialSend;
     App.SerialControl -> Serial;
     App.SerialSend -> SerialSend;
+
+    components new TimerMilliC();
+    App.Timer -> TimerMilliC;
 }

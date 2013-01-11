@@ -50,6 +50,10 @@ def get_rssi(data):
     return get_val(data, 'rssi', '>h') - RSSI_OFFSET
 
 
+def get_series(data):
+    return get_val(data, 'series', '>H')
+
+
 am = tos.AM(tos.getSource(src))
 
 while True:
@@ -59,5 +63,6 @@ while True:
     d = get_destination(data)
     c = get_counter(data)
     r = get_rssi(data)
+    sr = get_series(data)
 
-    print '%d -> %d, counter: %d, rssi: %d' % (s, d, c, r)
+    print '%d)\t%d -> %d, counter: %d, rssi: %d' % (sr, s, d, c, r)

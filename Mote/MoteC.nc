@@ -38,12 +38,12 @@ implementation
         beacon_pkt,
         collect_pkt;
 
-    uint16_t counter;
+    uint16_t counter = 1;
 
     event void Boot.booted(void)
     {
         call RadioControl.start();
-    } 
+    }
 
     event void RadioControl.startDone(error_t err)
     {
@@ -79,6 +79,7 @@ implementation
 
         outmsg->source = inmsg->nodeid;
         outmsg->destination = TOS_NODE_ID;
+        outmsg->series = settings.series;
         outmsg->counter = inmsg->counter;
         outmsg->rssi = GETRSSI(msg);
 
@@ -128,6 +129,7 @@ implementation
         settings = *s;
 
         if (settings.series) {
+            counter = 1;
             call BeaconTimer.startPeriodic(BEACON_PERIOD);
         }
         else {

@@ -19,6 +19,8 @@ module BaseStationC
 
         interface SplitControl as SerialControl;
         interface AMSend as SerialSend;
+
+        interface Timer<TMilli>;
     }
 }
 
@@ -30,11 +32,28 @@ implementation
 
     message_t serial_pkt;
 
+    void next(void)
+    {
+        settings.series++;
+        if (!settings.series)
+            settings.series = 1;
+        led_on(LED_BEACON);
+        call Settings.change(&settings);
+    }
+
+    void pause(void)
+    {
+        nx_struct Settings s = settings;
+        s.series = 0;
+        led_off(LED_BEACON);
+        call Settings.change(&s);
+    }
+
     event void Boot.booted(void)
     {
         call RadioControl.start();
         call SerialControl.start();
-    } 
+    }
 
     event void SerialSend.sendDone(message_t *msg, error_t error)
     {
@@ -72,6 +91,11 @@ implementation
             serial_busy = TRUE;
         }
 
+        if (inmsg->counter >= 10) {
+            pause();
+            call Timer.startOneShot(5000);
+        }
+
         return msg;
     }
 
@@ -81,6 +105,7 @@ implementation
             call CollectionControl.start();
             call DissControl.start();
             call RootControl.setRoot();
+            next();
         }
         else {
             call RadioControl.start();
@@ -104,17 +129,8 @@ implementation
     {
     }
 
-    void next(void)
+    event void Timer.fired(void)
     {
-        if (!++settings.series)
-            settings.series = 1;
-        call Settings.change(&settings);
-    }
-
-    void pause(void)
-    {
-        nx_struct Settings s = settings;
-        s.series = 0;
-        call Settings.change(&s);
+        next();
     }
 }
