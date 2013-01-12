@@ -1,10 +1,10 @@
-#include "LcdDisp.h"
+#include "LcdControl.h"
 #include <string.h>
 
-module LcdDispP
+module LcdControlP
 {
     provides {
-        interface LcdDisp;
+        interface LcdControl;
         interface Msp430UartConfigure;
     }
 
@@ -23,9 +23,9 @@ implementation
         printing=FALSE;
 
     uint8_t
-        lines[2 * (LCDDISP_LEN + 1)],
+        lines[2 * (LCD_LEN + 1)],
         *line1 = lines + 1,
-        *line2 = lines + 1 + LCDDISP_LEN;
+        *line2 = lines + 1 + LCD_LEN;
 
 
     task void request(void)
@@ -42,12 +42,12 @@ implementation
 
     task void button1(void)
     {
-        signal LcdDisp.button1Pressed();
+        signal LcdControl.button1Pressed();
     }
 
     task void button2(void)
     {
-        signal LcdDisp.button2Pressed();
+        signal LcdControl.button2Pressed();
     }
 
     event void Boot.booted(void)
@@ -71,7 +71,7 @@ implementation
             call UartStream.send(lines, sizeof lines); //unseren vorher aufbereiteten String senden
         }
         else {
-            uint8_t nop[] = { LCDDISP_NOP };
+            uint8_t nop[] = { LCD_NOP };
             call UartStream.enableReceiveInterrupt(); //<= das hier war das Hauptproblem
             call UartStream.send(nop, sizeof nop);
         }
@@ -95,11 +95,11 @@ implementation
     {
         switch (byte) {
 
-            case LCDDISP_BUTTON1:
+            case LCD_BUTTON1:
                 post button1();
                 break;
 
-            case LCDDISP_BUTTON2:
+            case LCD_BUTTON2:
                 post button2();
                 break;
         }
@@ -125,23 +125,23 @@ implementation
 
 
 
-    command void LcdDisp.print(const char *s1, const char *s2)
+    command void LcdControl.print(const char *s1, const char *s2)
     {
         size_t len;
-        memset(line1, ' ', LCDDISP_LEN);
-        memset(line2, ' ', LCDDISP_LEN);
+        memset(line1, ' ', LCD_LEN);
+        memset(line2, ' ', LCD_LEN);
 
-        line1[-1] = LCDDISP_CLEAR_LINE1;
-        line2[-1] = LCDDISP_CLEAR_LINE2;
+        line1[-1] = LCD_CLEAR_LINE1;
+        line2[-1] = LCD_CLEAR_LINE2;
 
         if (*s1) {
             len = strlen(s1);
-            memcpy(line1, s1, (len <= LCDDISP_LEN ? len : LCDDISP_LEN));
+            memcpy(line1, s1, (len <= LCD_LEN ? len : LCD_LEN));
         }
 
         if (*s2) {
             len = strlen(s2);
-            memcpy(line2, s2, (len <= LCDDISP_LEN ? len : LCDDISP_LEN));
+            memcpy(line2, s2, (len <= LCD_LEN ? len : LCD_LEN));
         }
 
         atomic {

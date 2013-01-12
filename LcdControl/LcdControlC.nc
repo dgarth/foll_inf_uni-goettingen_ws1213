@@ -1,12 +1,12 @@
-configuration LcdDispC
+configuration LcdControlC
 {
-    provides interface LcdDisp;
+    provides interface LcdControl;
 }
 
 implementation
 {
-    components LcdDispP as App;
-    LcdDisp = App;
+    components LcdControlP as App;
+    LcdControl = App;
 
     components MainC;
     App.Boot -> MainC;

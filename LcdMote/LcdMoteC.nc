@@ -6,7 +6,7 @@ module LcdMoteC
         interface Boot;
         interface Leds;
         interface Timer<TMilli>;
-        interface LcdDisp;
+        interface LcdControl;
     }
 }
 
@@ -17,15 +17,15 @@ implementation
     event void Boot.booted(void)
     {
         call Timer.startPeriodic(2000);
-        call LcdDisp.print("Good Morning", "I booted!");
+        call LcdControl.print("Good Morning", "I booted!");
     }
 
-    event void LcdDisp.button1Pressed(void)
+    event void LcdControl.button1Pressed(void)
     {
         call Leds.led0Toggle();
     }
 
-    event void LcdDisp.button2Pressed(void)
+    event void LcdControl.button2Pressed(void)
     {
         call Leds.led1Toggle();
     }
@@ -33,10 +33,10 @@ implementation
     event void Timer.fired(void)
     {
         if ((state ^= 1)) {
-            call LcdDisp.print("asdf", "wtf");
+            call LcdControl.print("asdf", "wtf");
         }
         else {
-            call LcdDisp.print("foo", "axfgsrhg");
+            call LcdControl.print("foo", "axfgsrhg");
         }
     }
 }

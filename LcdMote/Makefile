@@ -1,3 +1,3 @@
-CFLAGS += -I../LcdDisp
+CFLAGS += -I../LcdControl
 COMPONENT=LcdMoteAppC
 include $(MAKERULES)

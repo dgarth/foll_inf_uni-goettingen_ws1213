@@ -1,4 +1,4 @@
-interface LcdDisp
+interface LcdControl
 {
   event void button1Pressed(void);
   event void button2Pressed(void);

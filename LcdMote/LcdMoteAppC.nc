@@ -15,6 +15,6 @@ implementation
     components new TimerMilliC() as Timer;
     App.Timer -> Timer;
 
-    components LcdDispC;
-    App.LcdDisp -> LcdDispC;
+    components LcdControlC;
+    App.LcdControl -> LcdControlC;
 }
