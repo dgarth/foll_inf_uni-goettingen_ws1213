@@ -124,25 +124,39 @@ implementation
     }
 
 
-
-    command void LcdControl.print(const char *s1, const char *s2)
+    command void LcdControl.puts(const char *s)
     {
-        size_t len;
-        memset(line1, ' ', LCD_LEN);
-        memset(line2, ' ', LCD_LEN);
+        static bool first_time = TRUE;
+        size_t len = strlen(s);
+        uint8_t *line;
 
-        line1[-1] = LCD_CLEAR_LINE1;
-        line2[-1] = LCD_CLEAR_LINE2;
+        if (first_time) {
+            /* prepare buffer */
+            line1[-1] = LCD_CLEAR_LINE1;
+            line2[-1] = LCD_CLEAR_LINE2;
+            memset(line1, ' ', LCD_LEN);
+            memset(line2, ' ', LCD_LEN);
 
-        if (*s1) {
-            len = strlen(s1);
-            memcpy(line1, s1, (len <= LCD_LEN ? len : LCD_LEN));
+            line = line1;
+            first_time = FALSE;
+        }
+        else {
+            /* clear first line */
+            memset(line1, ' ', LCD_LEN);
+
+            /* move second line up */
+            memcpy(line1, line2, LCD_LEN);
+
+            line = line2;
         }
 
-        if (*s2) {
-            len = strlen(s2);
-            memcpy(line2, s2, (len <= LCD_LEN ? len : LCD_LEN));
-        }
+        /* clear output line */
+        memset(line, ' ', LCD_LEN);
+
+        if (len > LCD_LEN)
+            len = LCD_LEN;
+
+        memcpy(line, s, len);
 
         atomic {
             printing = TRUE;
