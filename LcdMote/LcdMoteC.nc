@@ -1,4 +1,4 @@
-#include <string.h>
+#include "LcdControl.h"
 
 module LcdMoteC
 {
@@ -17,7 +17,8 @@ implementation
     event void Boot.booted(void)
     {
         call Timer.startPeriodic(2000);
-        call LcdControl.print("Good Morning", "I booted!");
+        call LcdControl.puts("Good Morning!");
+        call LcdControl.lcdprintf("Node %u booted", TOS_NODE_ID);
     }
 
     event void LcdControl.button1Pressed(void)
@@ -33,10 +34,10 @@ implementation
     event void Timer.fired(void)
     {
         if ((state ^= 1)) {
-            call LcdControl.print("asdf", "wtf");
+            call LcdControl.puts("foo");
         }
         else {
-            call LcdControl.print("foo", "axfgsrhg");
+            call LcdControl.puts("bar");
         }
     }
 }
