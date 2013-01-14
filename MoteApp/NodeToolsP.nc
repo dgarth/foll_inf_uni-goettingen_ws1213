@@ -6,7 +6,7 @@
 /* NodeToolsP.nc - Implementierung des Interfaces NodeTools. */
 
 #include <printf.h>
-#include <allnodes.h>
+#include "allnodes.h"
 
 module NodeToolsP {
 	provides interface NodeTools;
@@ -142,16 +142,16 @@ implementation {
 		}
 
 		/* Parameter kopieren (in eine eigene message_t-Instanz) */
-		pmsg = (node_msg_t*) call Packet.getPayload(&sPacket, sizeof(node_msg_t));
+		pmsg = (node_msg_t*) call SerialPacket.getPayload(&sPacket, sizeof(node_msg_t));
 		memcpy(pmsg, response, sizeof(node_msg_t));
 
-      	result = call AMSend.send(AM_BROADCAST_ADDR, &sPacket, sizeof(node_msg_t));
+      	result = call SerialAMSend.send(AM_BROADCAST_ADDR, &sPacket, sizeof(node_msg_t));
 		if (result == SUCCESS) {
 			locked = TRUE;
 		}
 	}
 
-	event void AMSend.sendDone(message_t* bufPtr, error_t error) {
+	event void SerialAMSend.sendDone(message_t* bufPtr, error_t error) {
 		if (&sPacket == bufPtr) {
 			locked = FALSE;
 		}
@@ -161,8 +161,8 @@ implementation {
 	}
 
 	/* Paket über die Konsole erhalten */
-	event message_t* Receive.receive(message_t* bufPtr, void* payload, uint8_t len) {
-		node_msg_t *pmsg = (node_msg_t) payload;
+	event message_t* SerialReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
+		node_msg_t *pmsg = (node_msg_t*) payload;
 		uint8_t led;
 		am_addr_t myAddr;
 
