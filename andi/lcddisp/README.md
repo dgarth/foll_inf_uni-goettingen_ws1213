@@ -23,11 +23,15 @@ Desweiteren gibt es ein paar Nicht-Ganz-Standard Steuerzeichen, die es versteht:
 	 0x12		| 18	| DC2	| LED 2 togglen
 	 0x13		| 19	| DC3	| Zeile 1 loeschen und Cursor auf ihre 1. Stelle
 	 0x14		| 20	| DC4	| Zeile 2 loeschen und Cursor auf ihre 1. Stelle
+	 0x16		| 22	| SYN	| Letzten gedrueckten Knopf anfordern
 	 0x20-0x7E	| 32-126| char	| Druckbares Zeichen dieses Wertes an Cursorstelle drucken und Cursor 1 nach rechts
 
 ### Knoepfe
 
-Das LCD-Board hat 2 Tastknoepfe, die bei Betaetigung die Zeichen 0x11 bzw. 0x12 an die Mote schicken.
+Das LCD-Board hat 2 Tastknoepfe, ihr Status kann mit 0x16 angefordert werden, der LCD sendet dann entweder
+ *	0x11 (= Knopf 1 zuletzt gedrueckt)
+oder
+ * 	0x12 (= Knopf 2 zuletzt gedrueckt)
 
 ### Auf den Motes
 
