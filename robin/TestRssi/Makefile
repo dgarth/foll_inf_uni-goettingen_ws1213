@@ -1,6 +1,0 @@
-COMPONENT=TestRssiC
-
-include $(MAKERULES)
-
-
- 
