@@ -20,12 +20,14 @@ implementation
 {
     bool
         requested=FALSE,
-        printing=FALSE;
+        printing=FALSE,
+        cmd=FALSE;
 
     uint8_t
         lines[2 * (LCD_LEN + 1)],
         *line1 = lines + 1,
-        *line2 = lines + 1 + LCD_LEN;
+        *line2 = lines + 1 + LCD_LEN,
+        action=0;
 
 
     task void request(void)
@@ -53,7 +55,7 @@ implementation
     event void Boot.booted(void)
     {
         call Timer.startPeriodic(200);
-        call Resource.request();
+        //call Resource.request();
     }
 
     /*****************************************************************************************
@@ -63,14 +65,16 @@ implementation
     /* Wenn wir den UART haben: */
     event void Resource.granted()
     {
-        bool p;
+        bool p, c;
         atomic {
             p = printing;
+            c = cmd;
         }
         if (p) {
             call UartStream.send(lines, sizeof lines); //unseren vorher aufbereiteten String senden
-        }
-        else {
+        } else if (cmd) {
+        	call UartStream.send(&action, sizeof(uint8_t)); 
+        } else {
             uint8_t nop[] = { LCD_NOP };
             call UartStream.enableReceiveInterrupt(); //<= das hier war das Hauptproblem
             call UartStream.send(nop, sizeof nop);
@@ -83,8 +87,9 @@ implementation
     async event void UartStream.sendDone(uint8_t *buf, uint16_t len, error_t error)
     {
         atomic {
-            if(printing) {
+            if(printing || cmd) {
                 printing = FALSE;
+                cmd = FALSE;
                 post release();
             }
         }
@@ -123,8 +128,8 @@ implementation
         }
     }
 
-
-    command void LcdControl.puts(const char *s)
+	/***************** Commands ********************/
+    command void LcdControl.puts(const char *s, uint8_t line_no)
     {
         static bool first_time = TRUE;
         size_t len = strlen(s);
@@ -139,8 +144,9 @@ implementation
 
             line = line1;
             first_time = FALSE;
-        }
-        else {
+        } else if(line_no) {
+        	line = (line_no==1) ? line1 : line2;
+        } else {
             /* clear first line */
             memset(line1, ' ', LCD_LEN);
 
@@ -163,7 +169,33 @@ implementation
             post request();
         }
     }
-
+	
+	command void LcdControl.beep()
+	{
+		atomic {
+			cmd = TRUE;
+			action = LCD_BEEP;
+			post request;
+		}
+	}
+	
+	command void LcdControl.led0Toggle()
+	{
+		atomic {
+			cmd = TRUE;
+			action = LCD_LED1;
+			post request;
+		}
+	}
+	
+	command void LcdControl.led0Toggle()
+	{
+		atomic {
+			cmd = TRUE;
+			action = LCD_LED2;
+			post request;
+		}
+	}
 
     /*****************************************************************************************
      * Uart Configuration, gesetzt auf 8N1-Modus bei 4800 Baud, entsprechend dem Display
