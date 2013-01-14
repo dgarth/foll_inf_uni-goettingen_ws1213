@@ -18,7 +18,7 @@ module MeasureTestC {
 
     event void NodeTools.onCommand(node_msg_t* cmd) {
         uint8_t partner = cmd->data[0];
-        uint16_t series = cmd->data[2] + cmd->data[3]<<8;
+        uint16_t series = cmd->data[2] + (cmd->data[3] << 8);
         uint16_t interval = 500;
         uint16_t count = 0;
         uint32_t time = 0;
