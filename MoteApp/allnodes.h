@@ -94,7 +94,4 @@ enum {
 /* Makros */
 #define flushMsg(...) printf(__VA_ARGS__);printfflush()
 
-enum { AM_MEASURE = 42 };
-
-
 #endif
