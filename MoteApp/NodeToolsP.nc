@@ -207,7 +207,7 @@ implementation {
 				break;
 
 			case CMD_USERCMD:
-				// fire onCommand
+				signal NodeTools.onCommand(pmsg);
 
 		}
 
