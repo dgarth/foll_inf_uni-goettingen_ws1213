@@ -20,6 +20,7 @@ module NodeToolsP {
 		interface Receive as SerialReceive;
     	interface AMSend as SerialAMSend;
     	interface Packet as SerialPacket;
+		interface AMPacket;
 	}
 }
 
@@ -131,78 +132,86 @@ implementation {
 		}
 	}
 
-	/* String als Antwort senden */
-	command void NodeTools.sendResponse(const char* response) {
+	/* Antwort senden */
+	command void NodeTools.sendResponse(node_msg_t* response) {
+		error_t result;
+		node_msg_t *pmsg;
 
+		if (!sAvailable) {
+			return;
+		}
+
+		/* Parameter kopieren (in eine eigene message_t-Instanz) */
+		pmsg = (node_msg_t*) call Packet.getPayload(&sPacket, sizeof(node_msg_t));
+		memcpy(pmsg, response, sizeof(node_msg_t));
+
+      	result = call AMSend.send(AM_BROADCAST_ADDR, &sPacket, sizeof(node_msg_t));
+		if (result == SUCCESS) {
+			locked = TRUE;
+		}
 	}
 
 	event void AMSend.sendDone(message_t* bufPtr, error_t error) {
 		if (&sPacket == bufPtr) {
 			locked = FALSE;
 		}
+		if (error != SUCCESS) {
+			call NodeTools.setLed(LED_RED, TRUE);
+		}
 	}
 
 	/* Paket über die Konsole erhalten */
 	event message_t* Receive.receive(message_t* bufPtr, void* payload, uint8_t len) {
 		node_msg_t *pmsg = (node_msg_t) payload;
+		uint8_t led;
+		am_addr_t myAddr;
 
 		if (len != sizeof(node_msg_t)) {
 			return bufPtr;
 		}
 
+		myAddr = call AMPacket.address();
+
 		/* "native" Kommandos implementieren, benutzerdefinierte weiterreichen */
 		switch (pmsg->cmd) {
+			case CMD_LEDON:
+				if (pmsg->data[0] == myAddr) {
+					led = pmsg->data[1];
+					call NodeTools.setLed(led, TRUE);
+				}
+				break;
+
+			case CMD_LEDOFF:
+				if (pmsg->data[0] == myAddr) {
+					led = pmsg->data[1];
+					call NodeTools.setLed(led, FALSE);
+				}
+				break;
+
+			case CMD_LEDTOGGLE:
+				if (pmsg->data[0] == myAddr) {
+					led = pmsg->data[1];
+					if (call Leds.get() && led) {
+						call NodeTools.setLed(led, FALSE);
+					} else {
+						call NodeTools.setLed(led, TRUE);
+					}
+				}
+				break;
+
+			case CMD_LEDBLINK:
+				if (pmsg->data[0] == myAddr) {
+					led = pmsg->data[1];
+					call NodeTools.flashLed(led, pmsg->data[2]);
+				}
+				break;
+
 			case CMD_USERCMD:
-				// fire onCommand
+				signal NodeTools.onCommand(pmsg);
 
 		}
 
 		return bufPtr;
 	}
-
-  }
-
 }
-
-implementation {
-
-  
-  event message_t* Receive.receive(message_t* bufPtr, void* payload, uint8_t len) {
-	console_msg_t *cm;
-	uint8_t led;
-	uint8_t state;
-
-    if (len != sizeof(console_msg_t)) {return bufPtr;}
-
-	cm = (console_msg_t*) payload;
-
-	/*if (cm->cmd == 5) {
-		call Leds.led0On();
-	}
-
-	if (cm->data[0] == 1) {
-		call Leds.led1On();
-	}*/
-
-	switch (cm->cmd) {
-		case 5:
-			state = call Leds.get();
-			led = cm->data[0];
-			if (state & led) {
-				call Leds.set(state & ~led);
-			} else {
-				call Leds.set(state | led);
-			}
-			break;
-	}
-
-	return bufPtr;
-
-      	//if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(test_serial_msg_t)) == SUCCESS) {call Leds.led1Toggle();}
-  }
-
-}
-
-
-
 
