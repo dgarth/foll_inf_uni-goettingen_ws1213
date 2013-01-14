@@ -34,6 +34,8 @@ implementation
         uint16_t count;
     } config;
 
+    task void stop(void);
+
     command void Measure.setup(uint8_t partner, uint16_t series, uint32_t time, uint16_t interval, uint16_t count)
     {
         counter = 0;
@@ -47,10 +49,34 @@ implementation
         call RadioControl.start();
     }
 
+    command error_t Measure.start(void)
+    {
+        if (!radio_ready || running) {
+            return FAIL;
+        }
+
+        running = TRUE;
+        call Timer.startPeriodic(config.interval);
+        return SUCCESS;
+    }
+
+    task void stop(void)
+    {
+        running = FALSE;
+        call Timer.stop();
+        signal Measure.stopped();
+    }
+
+    command void Measure.stop(void)
+    {
+        post stop();
+    }
+
     event void RadioControl.startDone(error_t err)
     {
         if (err == SUCCESS) {
-            ready = TRUE;
+            radio_ready = TRUE;
+            signal Measure.setupDone(SUCCESS);
         }
         else {
             call RadioControl.start();
@@ -60,7 +86,7 @@ implementation
     event void RadioControl.stopDone(error_t err)
     {
         if (err == SUCCESS) {
-            ready = FALSE;
+            radio_ready = FALSE;
         }
     }
 
@@ -78,12 +104,7 @@ implementation
         now = Timer.getNow();
 
         signal Measure.received(rssi, now);
-    }
-
-    event void CollectionSend.sendDone(message_t *msg, error_t error)
-    {
-        led_off(LED_COLLECT);
-        collect_busy = FALSE;
+        return msg;
     }
 
     event void Timer.fired(void)
@@ -92,12 +113,16 @@ implementation
             return;
         }
 
-        if (call BeaconSend.send(config.partner, &pkt, 0) == SUCCESS) {
+        if (call Send.send(config.partner, &pkt, 0) == SUCCESS) {
             radio_busy = TRUE;
+        }
+
+        if (config.count && counter++ >= config.count) {
+            post stop();
         }
     }
 
-    event void BeaconSend.sendDone(message_t *msg, error_t error)
+    event void Send.sendDone(message_t *msg, error_t error)
     {
         if (msg == &pkt) {
             radio_busy = FALSE;

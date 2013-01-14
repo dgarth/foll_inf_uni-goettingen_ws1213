@@ -4,7 +4,8 @@ interface Measure
     event void setupDone(error_t error);
 
     command error_t start(void);
-    command error_t stop(void);
+    command void stop(void);
+    event void stopped(void);
 
     event void received(uint8_t rssi, uint32_t time);
 }
