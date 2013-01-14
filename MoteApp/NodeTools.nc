@@ -10,4 +10,3 @@ interface NodeTools {
 	event void onCommand(node_msg_t* cmd);
 	command void sendResponse(node_msg_t* response);
 }
-

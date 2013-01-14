@@ -1,4 +1,4 @@
-#include "../allmotes.h"
+#include "../allnodes.h"
 
 configuration MeasureC
 {

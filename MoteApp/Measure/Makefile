@@ -1,0 +1,3 @@
+COMPONENT=MeasureTestAppC
+include $(MAKERULES)
+

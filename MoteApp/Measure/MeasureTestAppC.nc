@@ -1,27 +1,18 @@
 #include "../allnodes.h"
 
-module MeasureTestAppC {
-    uses {
-        interface NodeTools
-        interface Boot
-        interface Timer<TMilli> as Timer
-        interface Measure
-    }
+configuration MeasureTestAppC {
 } implementation {
-    event void Boot.booted(void) {
-        command NodeTools.serialInit();
-    }
+    components MeasureTestC as TestApp;
 
-    event void NodeTools.onCommand(node_msg* cmd) {
-        uint8_t partner = cmd->data[0];
-        uint16_t series = cmd->data[2] + cmd->data[3]<<8;
-        uint16_t interval = 500;
-        uint16_t count = 0;
-        command Measure.setup(partner, series, time, interval, count)		
-    }
+    components MainC;	
+    TestApp.Boot -> MainC.Boot;
 
-    event void Measure.received(uint8_t rssi, uint32_t time) {
-        char resp = (char) rssi;
-        command NodeTools.sendResponse(&resp)
-    }
+    components NodeToolsC;
+    TestApp.NodeTools -> NodeToolsC;
+
+    /*components new Timer<TMilli>() as Timer;
+    TestApp.Timer = Timer;*/
+
+    components MeasureC;
+    TestApp.Measure -> MeasureC;
 }

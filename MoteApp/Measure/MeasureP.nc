@@ -100,8 +100,8 @@ implementation
             return msg;
         }
 
-        rssi = RssiPacket.getRssi(msg);
-        now = Timer.getNow();
+        rssi = call RssiPacket.getRssi(msg);
+        now = call Timer.getNow();
 
         signal Measure.received(rssi, now);
         return msg;
