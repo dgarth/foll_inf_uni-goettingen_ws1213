@@ -88,6 +88,7 @@ typedef nx_struct node_msg {
 
 enum {
 	AM_NODE_MSG = 0x89,
+	AM_MEASURE,
 };
 
 /* Makros */
