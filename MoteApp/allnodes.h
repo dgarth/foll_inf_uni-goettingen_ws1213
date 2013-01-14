@@ -74,11 +74,13 @@ data[8] = Partner ID (andere ID in CMD_NEWMEASURE), uint8 */
 /* Send user command. Parameters:
 data = command (string) */
 
+#define MAX_DATA 25
+
 typedef nx_struct node_msg {
 	/* Kommando */
 	nx_uint8_t cmd;
 	/* Daten oder Parameter */
-	nx_uint8_t data[25];
+	nx_uint8_t data[MAX_DATA];
 	/* Länge der gültigen Daten */
 	nx_uint8_t length;
 	/* 1, falls das nächste Paket weitere
@@ -88,7 +90,6 @@ typedef nx_struct node_msg {
 
 enum {
 	AM_NODE_MSG = 0x89,
-	AM_MEASURE,
 };
 
 /* Makros */
