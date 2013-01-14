@@ -1,4 +1,0 @@
-COMPONENT=TestEX1000UARTC
-
-include $(MAKERULES)
-
