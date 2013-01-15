@@ -7,6 +7,6 @@ interface NodeTools {
 	/* Mote-Steuerung per Konsole */
 	command void serialInit();
 	command void serialShutdown();
-	event void onCommand(node_msg_t* cmd);
+	event void onSerialCommand(node_msg_t* cmd);
 	command void sendResponse(node_msg_t* response);
 }

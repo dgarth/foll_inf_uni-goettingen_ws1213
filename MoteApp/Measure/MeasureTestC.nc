@@ -1,3 +1,8 @@
+// Das vi-Syntaxhighlighting funktioniert (bei mir) nur mit diesem seltsamen Kommentar-Konstrukt am Anfang.
+
+/**
+**/
+
 #include "../allnodes.h"
 
 module MeasureTestC {
@@ -16,7 +21,7 @@ module MeasureTestC {
     
     }
 
-    event void NodeTools.onCommand(node_msg_t* cmd) {
+    event void NodeTools.onSerialCommand(node_msg_t* cmd) {
         uint8_t partner = cmd->data[0];
         uint16_t series = cmd->data[2] + cmd->data[3]<<8;
         uint16_t interval = 500;
