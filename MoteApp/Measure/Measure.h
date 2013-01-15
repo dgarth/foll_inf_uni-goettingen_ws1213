@@ -7,7 +7,6 @@ struct measure_options
         partner;
 
     uint16_t
-        series,
         interval,
         count;
 };
