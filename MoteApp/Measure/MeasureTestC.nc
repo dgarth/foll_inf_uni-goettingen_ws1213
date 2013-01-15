@@ -23,7 +23,7 @@ implementation {
         call Measure.start();
     }
 
-    event void NodeTools.onCommand(node_msg_t* cmd) {
+    event void NodeTools.onSerialCommand(node_msg_t* cmd) {
         struct measure_options opts = {
             .partner = cmd->data[0],
             .interval = 500,
