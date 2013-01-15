@@ -1,3 +1,8 @@
+// Das vi-Syntaxhighlighting funktioniert (bei mir) nur mit diesem seltsamen Kommentar-Konstrukt am Anfang.
+
+/**
+**/
+
 #include "../allnodes.h"
 
 module MeasureTestC {
