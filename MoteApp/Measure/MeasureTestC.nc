@@ -26,7 +26,6 @@ implementation {
     event void NodeTools.onCommand(node_msg_t* cmd) {
         struct measure_options opts = {
             .partner = cmd->data[0],
-            .series = cmd->data[2] + (cmd->data[3] << 8),
             .interval = 500,
             .count = 0,
         };
