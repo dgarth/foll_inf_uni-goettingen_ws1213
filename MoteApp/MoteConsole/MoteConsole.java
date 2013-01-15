@@ -54,12 +54,12 @@ public class MoteConsole implements MessageListener {
 		Scanner sc = new Scanner(System.in);
 		NodeMsg msg;
 		short cmd;
-		short[] data;
+		Pair<short[], Short> dataObj;
 
 		while (bContinue) {
 			msg = new NodeMsg();
 			cmd = -1;
-			data = null;
+			dataObj = null;
 
 			// prompt & read
 			System.out.print("> ");
@@ -86,15 +86,18 @@ public class MoteConsole implements MessageListener {
 
 				if (tokens[0].equals("ledblink") && tokens.length == 4) {
 					cmd = MoteCommands.LedBlink;
-					data = getDataForCmd(cmd, tokens[1], tokens[2], tokens[3]);
+					dataObj = getDataForCmd(cmd, tokens[1], tokens[2], tokens[3]);
 				} else {
-					data = getDataForCmd(cmd, tokens[1], tokens[2]);
+					dataObj = getDataForCmd(cmd, tokens[1], tokens[2]);
 				}
 			}
 
-			if (cmd < 0 || data == null) {
+			if (cmd < 0 || dataObj == null) {
 				System.out.println("invalid command or argument.");
 			} else {
+				msg.set_cmd(cmd);
+				msg.set_data(dataObj.a);
+				msg.set_length(dataObj.b);
 				try {
 					System.out.println("sending: " + msg.toString());
 					moteIF.send(0, msg);
@@ -126,8 +129,10 @@ public class MoteConsole implements MessageListener {
 		ps.println("ledblink ID LED times");
 	}
 
-	private static short[] getDataForCmd(short cmd, String... args) {
+	private static Pair<short[], Short> getDataForCmd(short cmd, String... args) {
+		Pair<short[], Short> result = new Pair<short[], Short>();
 		short data[] = new short[25];
+		short len = 0;
 
 		switch (cmd) {
 			case MoteCommands.Echo:
@@ -137,11 +142,13 @@ public class MoteConsole implements MessageListener {
 			case MoteCommands.LedToggle:
 				data[0] = Short.parseShort(args[0]); // ID
 				data[1] = Short.parseShort(args[1]); // LED
+				len = 2;
 				break;
 			case MoteCommands.LedBlink:
 				data[0] = Short.parseShort(args[0]); // ID
 				data[1] = Short.parseShort(args[1]); // LED
 				data[2] = Short.parseShort(args[2]); // # times
+				len = 3;
 				break;
 			case MoteCommands.NewMeasure:
 				break;
@@ -157,8 +164,14 @@ public class MoteConsole implements MessageListener {
 				break;
 		}
 
-		return data;
+		result.a = data;
+		result.b = len;
+		return result;
 	}
 
+	private static class Pair<T1, T2> {
+		public T1 a;
+		public T2 b;
+	}
 }
 

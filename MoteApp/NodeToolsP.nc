@@ -175,35 +175,37 @@ implementation {
 		/* "native" Kommandos implementieren, benutzerdefinierte weiterreichen */
 		switch (pmsg->cmd) {
 			case CMD_LEDON:
-				if (pmsg->data[0] == myAddr) {
+				//if (pmsg->data[0] == myAddr) {
 					led = pmsg->data[1];
 					call NodeTools.setLed(led, TRUE);
-				}
+				//} else {
+				//	call NodeTools.flashLed(LED_BLUE, 2);
+				//}
 				break;
 
 			case CMD_LEDOFF:
-				if (pmsg->data[0] == myAddr) {
+				//if (pmsg->data[0] == myAddr) {
 					led = pmsg->data[1];
 					call NodeTools.setLed(led, FALSE);
-				}
+				//}
 				break;
 
 			case CMD_LEDTOGGLE:
-				if (pmsg->data[0] == myAddr) {
+				//if (pmsg->data[0] == myAddr) {
 					led = pmsg->data[1];
 					if (call Leds.get() && led) {
 						call NodeTools.setLed(led, FALSE);
 					} else {
 						call NodeTools.setLed(led, TRUE);
 					}
-				}
+				//}
 				break;
 
 			case CMD_LEDBLINK:
-				if (pmsg->data[0] == myAddr) {
+				//if (pmsg->data[0] == myAddr) {
 					led = pmsg->data[1];
 					call NodeTools.flashLed(led, pmsg->data[2]);
-				}
+				//}
 				break;
 
 			case CMD_USERCMD:
