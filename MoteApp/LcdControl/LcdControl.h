@@ -15,7 +15,7 @@ enum
 
     // "events"
     LCD_BUTTON1     = 0x11,
-    LCD_BUTTON2     = 0x12,
+    LCD_BUTTON2     = 0x12
 };
 
 
@@ -41,6 +41,6 @@ static char *_lcdprintf(const char *fmt, ...)
 }
 #undef BUFFERS
 
-#define lcdprintf(...) puts(_lcdprintf(__VA_ARGS__))
+#define lcdprintf(...) puts(_lcdprintf(__VA_ARGS__), 0)
 
 #endif

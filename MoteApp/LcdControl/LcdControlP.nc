@@ -72,7 +72,7 @@ implementation
         }
         if (p) {
             call UartStream.send(lines, sizeof lines); //unseren vorher aufbereiteten String senden
-        } else if (cmd) {
+        } else if (c) {
         	call UartStream.send(&action, sizeof(uint8_t)); 
         } else {
             uint8_t nop[] = { LCD_NOP };
@@ -146,7 +146,7 @@ implementation
             first_time = FALSE;
         } else if(line_no) {
         	line = (line_no==1) ? line1 : line2;
-        } else {
+        } else {
             /* clear first line */
             memset(line1, ' ', LCD_LEN);
 
@@ -175,7 +175,7 @@ implementation
 		atomic {
 			cmd = TRUE;
 			action = LCD_BEEP;
-			post request;
+			post request();
 		}
 	}
 	
@@ -184,16 +184,16 @@ implementation
 		atomic {
 			cmd = TRUE;
 			action = LCD_LED1;
-			post request;
+			post request();
 		}
 	}
 	
-	command void LcdControl.led0Toggle()
+	command void LcdControl.led1Toggle()
 	{
 		atomic {
 			cmd = TRUE;
 			action = LCD_LED2;
-			post request;
+			post request();
 		}
 	}
 
