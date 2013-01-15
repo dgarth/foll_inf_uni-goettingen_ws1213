@@ -17,41 +17,29 @@ module MeasureP
 
 implementation
 {
+    task void stop(void);
+
     bool
-        radio_ready=FALSE,
+        setup_done=FALSE,
         radio_busy=FALSE,
         running=FALSE;
 
-    message_t pkt;
-
+    struct measure_options config = { 0 };
     uint16_t counter;
 
-    struct {
-        uint8_t partner;
-        uint16_t series;
-        uint32_t time;
-        uint16_t interval;
-        uint16_t count;
-    } config;
+    message_t pkt;
 
-    task void stop(void);
-
-    command void Measure.setup(uint8_t partner, uint16_t series, uint32_t time, uint16_t interval, uint16_t count)
+    command void Measure.setup(struct measure_options opt)
     {
         counter = 0;
-
-        config.partner = partner;
-        config.series = series;
-        config.time = time;
-        config.interval = interval;
-        config.count = count;
-
-        call RadioControl.start();
+        config = opt;
+        if (!setup_done)
+            call RadioControl.start();
     }
 
     command error_t Measure.start(void)
     {
-        if (!radio_ready || running) {
+        if (!setup_done || running) {
             return FAIL;
         }
 
@@ -75,18 +63,15 @@ implementation
     event void RadioControl.startDone(error_t err)
     {
         if (err == SUCCESS) {
-            radio_ready = TRUE;
-            signal Measure.setupDone(SUCCESS);
+            setup_done = TRUE;
         }
-        else {
-            call RadioControl.start();
-        }
+        signal Measure.setupDone(err);
     }
 
     event void RadioControl.stopDone(error_t err)
     {
         if (err == SUCCESS) {
-            radio_ready = FALSE;
+            setup_done = FALSE;
         }
     }
 

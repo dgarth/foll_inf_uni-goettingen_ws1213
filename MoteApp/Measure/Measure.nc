@@ -1,11 +1,55 @@
+#include "Measure.h"
+
 interface Measure
 {
-    command void setup(uint8_t partner, uint16_t series, uint32_t time, uint16_t interval, uint16_t count);
+    /**
+     * Set parameters for the next test series.
+     *
+     * If necessary, initializes other needed components.
+     *
+     * @param <b>opt</b> options for the test series
+     */
+    command void setup(struct measure_options opt);
+
+    /**
+     * Signalled when setup was completed.
+     *
+     * @param <b>error</b> SUCCESS or FAIL
+     */
     event void setupDone(error_t error);
 
+    /**
+     * Start test series with current configuration.
+     *
+     * @return
+     *  <li> SUCCESS if test series was started
+     *  <li> FAIL if a test series is already running or setup() was never
+     *       called
+     */
     command error_t start(void);
+
+    /**
+     * Stop currently running test series.
+     *
+     * Does nothing if there is no test series running.
+     */
     command void stop(void);
+
+    /**
+     * Signalled when a test series is stopped.
+     *
+     * reasons for stopping can be:
+     *  <li> Measure.stop() was called
+     *  <li> the configured packet limit was reached
+     */
     event void stopped(void);
 
+
+    /**
+     * Signalled when a measure packet was received.
+     *
+     * @param <b>rssi</b> measured RSSI value
+     * @param <b>time</b> time of arrival
+     */
     event void received(uint8_t rssi, uint32_t time);
 }

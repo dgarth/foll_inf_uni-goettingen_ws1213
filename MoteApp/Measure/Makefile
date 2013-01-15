@@ -1,5 +1,6 @@
 COMPONENT=MeasureTestAppC
 CFLAGS += -I$(TOSDIR)/lib/printf
 CFLAGS += -DNEW_PRINTF_SEMANTICS
+CFLAGS += -I..
 include $(MAKERULES)
 
