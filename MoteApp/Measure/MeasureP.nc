@@ -33,8 +33,25 @@ implementation
     {
         counter = 0;
         config = opt;
-        if (!setup_done)
-            call RadioControl.start();
+
+        /* try to start up the radio */
+        switch (call RadioControl.start()) {
+
+            /* radio already started -> good! */
+            case EALREADY:
+                signal Measure.setupDone(SUCCESS);
+                break;
+
+            /* startDone will be signalled -> do nothing for now */
+            case SUCCESS:
+                break;
+
+            /* can't start radio -> bad */
+            case EBUSY:
+            case FAIL:
+                signal Measure.setupDone(FAIL);
+                break;
+        }
     }
 
     command error_t Measure.start(void)
