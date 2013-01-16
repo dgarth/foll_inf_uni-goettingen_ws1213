@@ -4,8 +4,9 @@ configuration MeasureTestAppC {
 } implementation {
     components MeasureTestC as TestApp;
 
-    components MainC;	
-    TestApp.Boot -> MainC.Boot;
+    components MainC, LedsC;
+    TestApp.Boot -> MainC;
+    TestApp.Leds -> LedsC;
 
     components NodeToolsC;
     TestApp.NodeTools -> NodeToolsC;
