@@ -1,3 +1,5 @@
+#include "Measure.h"
+
 module MeasureP
 {
     provides interface Measure;
@@ -162,7 +164,7 @@ implementation
         /* are we measuring and is the message OK (a dummy packet from our partner)? */
         if (running && len == 0 && source == config.partner) {
 
-            rssi = call RssiPacket.getRssi(msg);
+            rssi = call RssiPacket.getRssi(msg) - RSSI_OFFSET;
             now = call Timer.getNow();
 
             signal Measure.received(rssi, now);
