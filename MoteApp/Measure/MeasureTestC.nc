@@ -3,7 +3,7 @@
 /** Und um einen kommentar zu dokumentieren, macht man einen kommentar oben drueber? :D
 **/
 
-#include "../allnodes.h"
+#include "allnodes.h"
 
 module MeasureTestC {
     uses {

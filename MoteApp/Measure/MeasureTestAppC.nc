@@ -1,4 +1,4 @@
-#include "../allnodes.h"
+#include "allnodes.h"
 
 configuration MeasureTestAppC {
 } implementation {
