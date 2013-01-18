@@ -9,8 +9,6 @@ module LcdControlP
     }
 
     uses {
-        interface Boot;
-        interface Timer<TMilli>;
         interface Resource;
         interface UartStream;
     }
@@ -18,27 +16,23 @@ module LcdControlP
 
 implementation
 {
-    bool
-        requested=FALSE,
-        printing=FALSE,
-        cmd=FALSE;
-
-    uint8_t
-        lines[2 * (LCD_LEN + 1)],
-        *line1 = lines + 1,
-        *line2 = lines + 1 + LCD_LEN,
-        action=0;
-
-
-    task void request(void)
+    uint8_t *send,
+    	syn[] ={ 0x16 },
+    	bell[] ={ 0x07 },
+    	dc1[] ={ 0x11 },
+    	dc2[] ={ 0x12 };
+    unsigned char line1[]="\x13                ",
+    		line2[]="\x14                ";
+    bool buttonrq = FALSE,
+    	ready = FALSE;
+    
+	task void request(void)
     {
-        requested = TRUE;
         call Resource.request();
     }
 
     task void release(void)
     {
-        requested = FALSE;
         call Resource.release();
     }
 
@@ -51,11 +45,9 @@ implementation
     {
         signal LcdControl.button2Pressed();
     }
-
-    event void Boot.booted(void)
+    task void readytask(void)
     {
-        call Timer.startPeriodic(200);
-        //call Resource.request();
+    	signal LcdControl.lcdReady();
     }
 
     /*****************************************************************************************
@@ -65,20 +57,7 @@ implementation
     /* Wenn wir den UART haben: */
     event void Resource.granted()
     {
-        bool p, c;
-        atomic {
-            p = printing;
-            c = cmd;
-        }
-        if (p) {
-            call UartStream.send(lines, sizeof lines); //unseren vorher aufbereiteten String senden
-        } else if (c) {
-        	call UartStream.send(&action, sizeof(uint8_t)); 
-        } else {
-            uint8_t nop[] = { LCD_NOP };
-            call UartStream.enableReceiveInterrupt(); //<= das hier war das Hauptproblem
-            call UartStream.send(nop, sizeof nop);
-        }
+    	call UartStream.send(send, sizeof send); //unseren vorher aufbereiteten String senden
     }
 
     /* Wenn wir fertig geschrieben haben, geben wir den UART frei, bei Taster-Abfrage
@@ -86,16 +65,13 @@ implementation
      */
     async event void UartStream.sendDone(uint8_t *buf, uint16_t len, error_t error)
     {
-        atomic {
-            if(printing || cmd) {
-                printing = FALSE;
-                cmd = FALSE;
-                post release();
-            }
-        }
+    	if(!buttonrq) {
+    	    call Resource.release();
+    	    ready = TRUE;
+    	}
     }
 
-    /* klappt jetzt! */
+
     async event void UartStream.receivedByte(uint8_t byte)
     {
         switch (byte) {
@@ -111,90 +87,76 @@ implementation
 
         //Nach empfang, UART freigeben
         call UartStream.disableReceiveInterrupt();
-        post release();
+        call Resource.release();
+        buttonrq = FALSE;
+        ready = TRUE;
     }
 
     async event void UartStream.receiveDone(uint8_t* buf, uint16_t len, error_t error)
     {
         //Hier koennte man laengere Nachrichten ueber den UART empfangen, fuer uns wohl eher uninteressant
     }
-
-
-    /***************** Timer Events ****************/
-    event void Timer.fired()
-    {
-        if (!requested) {
-            post request();
-        }
-    }
-
+	
 	/***************** Commands ********************/
+	command void LcdControl.buttonRequest(void)
+    {	
+    	atomic {
+    		ready = FALSE;
+    		buttonrq = TRUE;
+    		send = syn;
+        }
+        call UartStream.enableReceiveInterrupt();
+        post request();
+    }
+    
     command void LcdControl.puts(const char *s, uint8_t line_no)
     {
-        static bool first_time = TRUE;
-        size_t len = strlen(s);
-        uint8_t *line;
-
-        if (first_time) {
-            /* prepare buffer */
-            line1[-1] = LCD_CLEAR_LINE1;
-            line2[-1] = LCD_CLEAR_LINE2;
-            memset(line1, ' ', LCD_LEN);
-            memset(line2, ' ', LCD_LEN);
-
-            line = line1;
-            first_time = FALSE;
-        } else if(line_no) {
-        	line = (line_no==1) ? line1 : line2;
-        } else {
-            /* clear first line */
-            memset(line1, ' ', LCD_LEN);
-
-            /* move second line up */
-            memcpy(line1, line2, LCD_LEN);
-
-            line = line2;
+    	int i;
+    	atomic {
+    	    if(line_no == 1) {
+        		for(i=0; i<sizeof(s) && i<16; i++)
+        			*(line1+i+1) = *(s+i);
+       			send = (uint8_t *) line1;
+       		} else {
+        		for(i=0; i<sizeof(s) && i<16; i++)
+        			*(line2+i+1) = *(s+i);
+        		send = (uint8_t *) line2;
+        	}
         }
-
-        /* clear output line */
-        memset(line, ' ', LCD_LEN);
-
-        if (len > LCD_LEN)
-            len = LCD_LEN;
-
-        memcpy(line, s, len);
-
-        atomic {
-            printing = TRUE;
-            post request();
-        }
+        post request();
     }
 	
-	command void LcdControl.beep()
+	command void LcdControl.beep(void)
 	{
 		atomic {
-			cmd = TRUE;
-			action = LCD_BEEP;
-			post request();
+			ready = FALSE;
+			send = bell;
 		}
+		post request();
 	}
 	
-	command void LcdControl.led0Toggle()
+	command void LcdControl.led0Toggle(void)
 	{
 		atomic {
-			cmd = TRUE;
-			action = LCD_LED1;
-			post request();
+			ready = FALSE;
+			send = dc1;
 		}
+		post request();
 	}
 	
-	command void LcdControl.led1Toggle()
+	command void LcdControl.led1Toggle(void)
 	{
 		atomic {
-			cmd = TRUE;
-			action = LCD_LED2;
-			post request();
+			ready = FALSE;
+			send = dc2;
 		}
+		post request();
+	}
+	
+	command void LcdControl.checkReady(void)
+	{
+		if(ready == TRUE)
+			post readytask();
 	}
 
     /*****************************************************************************************

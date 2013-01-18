@@ -13,12 +13,13 @@ module LcdTest
 implementation
 {
     int state = 0;
-
+    bool ready = FALSE;
+    char *str[] = {"foo", "bar"};
+    
     event void Boot.booted(void)
     {
-        call Timer.startPeriodic(2000);
+        call Timer.startPeriodic(4000);
         call LcdControl.puts("Good Morning!", 2);
-        call LcdControl.lcdprintf("Node %u booted", TOS_NODE_ID);
     }
 
     event void LcdControl.button1Pressed(void)
@@ -28,17 +29,20 @@ implementation
 
     event void LcdControl.button2Pressed(void)
     {
+    	call Leds.led0Toggle();
     	call LcdControl.beep();
         call LcdControl.led1Toggle();
     }
 
     event void Timer.fired(void)
     {
-        if ((state ^= 1)) {
-            call LcdControl.puts("foo", 1);
-        }
-        else {
-            call LcdControl.puts("bar", 1);
-        }
+       state ^= 1;
+       call LcdControl.checkReady();
+        //call LcdControl.buttonRequest();
+    }
+    
+    event void LcdControl.lcdReady(void) 
+    {
+    	call LcdControl.puts(str[state], 1);
     }
 }
