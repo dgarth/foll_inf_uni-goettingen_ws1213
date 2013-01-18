@@ -1,6 +1,8 @@
 #include "LcdControl.h"
 #include <string.h>
 
+#define BUF_LEN 38
+
 module LcdControlP
 {
     provides {
@@ -11,20 +13,21 @@ module LcdControlP
     uses {
         interface Resource;
         interface UartStream;
+        interface Leds;
+        interface Alarm<TMilli, uint32_t>;
     }
 }
 
 implementation
 {
-    uint8_t *send,
-    	syn[] ={ 0x16 },
-    	bell[] ={ 0x07 },
-    	dc1[] ={ 0x11 },
-    	dc2[] ={ 0x12 };
-    unsigned char line1[]="\x13                ",
-    		line2[]="\x14                ";
-    bool buttonrq = FALSE,
-    	ready = FALSE;
+	bool lcd_present = FALSE,
+		first_send = TRUE,
+		first_receive = TRUE,
+		boot = TRUE,
+		stop = TRUE;
+	
+	char disp_buf[BUF_LEN];
+	char node_id[3];
     
 	task void request(void)
     {
@@ -45,51 +48,74 @@ implementation
     {
         signal LcdControl.button2Pressed();
     }
-    task void readytask(void)
+    
+    task void lcdFound(void)
     {
-    	signal LcdControl.lcdReady();
+    	signal LcdControl.lcdEnabled();
     }
 
     /*****************************************************************************************
      * Uart Usage
      *****************************************************************************************/
-
+	
+	async event void Alarm.fired()
+	{
+		call Leds.led0Toggle();
+		if(boot) {
+			post request();
+			boot = FALSE;
+			call Alarm.start(300);
+		} else if(!stop && lcd_present) {
+			post request();		
+		}
+	}
+	
     /* Wenn wir den UART haben: */
     event void Resource.granted()
     {
-    	call UartStream.send(send, sizeof send); //unseren vorher aufbereiteten String senden
+    	call UartStream.enableReceiveInterrupt();
+    	call UartStream.send((uint8_t*) disp_buf, BUF_LEN);
     }
 
-    /* Wenn wir fertig geschrieben haben, geben wir den UART frei, bei Taster-Abfrage
-     * erst, wenn wir empfangen haben.
-     */
     async event void UartStream.sendDone(uint8_t *buf, uint16_t len, error_t error)
     {
-    	if(!buttonrq) {
-    	    call Resource.release();
-    	    ready = TRUE;
-    	}
+    	call Leds.led2Toggle();
+    	atomic disp_buf[34] = 0;
+    	atomic disp_buf[35] = 0;
+    	atomic disp_buf[36] = 0;
+    	
     }
 
 
     async event void UartStream.receivedByte(uint8_t byte)
     {
+    	call Leds.led1Toggle();
+    	call UartStream.disableReceiveInterrupt();
         switch (byte) {
-
             case LCD_BUTTON1:
                 post button1();
-                break;
+            break;
 
             case LCD_BUTTON2:
                 post button2();
-                break;
+            break;
+            
+            case LCD_IDLE:
+            	atomic lcd_present = TRUE;
+            break;
+            
+            default:
+            break;
         }
-
-        //Nach empfang, UART freigeben
-        call UartStream.disableReceiveInterrupt();
         call Resource.release();
-        buttonrq = FALSE;
-        ready = TRUE;
+        
+        if(lcd_present && first_receive) {
+        	post lcdFound();
+        	atomic first_receive = FALSE;
+        }
+        
+        if(!(call Alarm.isRunning()))
+        	call Alarm.start(200);
     }
 
     async event void UartStream.receiveDone(uint8_t* buf, uint16_t len, error_t error)
@@ -98,66 +124,75 @@ implementation
     }
 	
 	/***************** Commands ********************/
-	command void LcdControl.buttonRequest(void)
-    {	
-    	atomic {
-    		ready = FALSE;
-    		buttonrq = TRUE;
-    		send = syn;
-        }
-        call UartStream.enableReceiveInterrupt();
-        post request();
-    }
+	
+	command void LcdControl.enable(void) {
+		atomic stop = FALSE;
+		call LcdControl.puts("Initialising...", 1);
+		itoa(TOS_NODE_ID, node_id, 10);
+		call LcdControl.puts(node_id, 2);
+		if(!(call Alarm.isRunning()))
+			call Alarm.start(200);
+	}
+	
+	command void LcdControl.disable(void) {
+		atomic stop = TRUE;
+	}
     
     command void LcdControl.puts(const char *s, uint8_t line_no)
     {
-    	int i;
-    	atomic {
-    	    if(line_no == 1) {
-        		for(i=0; i<sizeof(s) && i<16; i++)
-        			*(line1+i+1) = *(s+i);
-       			send = (uint8_t *) line1;
-       		} else {
-        		for(i=0; i<sizeof(s) && i<16; i++)
-        			*(line2+i+1) = *(s+i);
-        		send = (uint8_t *) line2;
-        	}
+    	char *line1 = disp_buf+1;
+    	char *line2 = disp_buf+18;
+    	char *line;
+    	uint8_t slen = 0;
+    	uint8_t i;
+    	
+    	if(first_send) {
+    		memset(disp_buf, 0, BUF_LEN);
+    		atomic {
+    			disp_buf[0] = LCD_CLEAR_LINE1;
+    			disp_buf[17] = LCD_CLEAR_LINE2;
+    			disp_buf[37] = LCD_BTRQ;
+    		}
+    		atomic first_send = FALSE;
         }
-        post request();
+        
+        switch(line_no) {
+        	case 1:
+        		line = line1;
+        	break;
+        	case 2:
+        		line = line2;
+        	break;
+        	default:
+        		memcpy(line1, line2, 16);
+        		line = line2;
+        	break;
+        }
+        
+        slen = strlen(s);
+        if (slen>16)
+        	slen = 16;
+        
+        strncpy(line, s, slen);   
+        for(i=slen; i<16; i++)
+        	*(line+i) = 0;
     }
 	
 	command void LcdControl.beep(void)
 	{
-		atomic {
-			ready = FALSE;
-			send = bell;
-		}
-		post request();
+		atomic disp_buf[34] = LCD_BEEP;
 	}
 	
 	command void LcdControl.led0Toggle(void)
 	{
-		atomic {
-			ready = FALSE;
-			send = dc1;
-		}
-		post request();
+		atomic disp_buf[35] = LCD_LED1;
 	}
 	
 	command void LcdControl.led1Toggle(void)
 	{
-		atomic {
-			ready = FALSE;
-			send = dc2;
-		}
-		post request();
+		atomic disp_buf[36] = LCD_LED2;
 	}
 	
-	command void LcdControl.checkReady(void)
-	{
-		if(ready == TRUE)
-			post readytask();
-	}
 
     /*****************************************************************************************
      * Uart Configuration, gesetzt auf 8N1-Modus bei 4800 Baud, entsprechend dem Display

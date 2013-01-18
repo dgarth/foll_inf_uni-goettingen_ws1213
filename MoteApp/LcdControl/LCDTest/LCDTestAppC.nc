@@ -11,10 +11,7 @@ implementation
 
     components LedsC;
     App.Leds -> LedsC;
-
-    components new TimerMilliC() as Timer;
-    App.Timer -> Timer;
-
+    
     components LcdControlC;
     App.LcdControl -> LcdControlC;
 }
