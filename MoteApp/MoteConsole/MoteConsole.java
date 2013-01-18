@@ -9,27 +9,33 @@ import net.tinyos.util.*;
 public class MoteConsole implements MessageListener {
 
 	private class MoteCommands {
-		/* Argument 1 = 1, 2, 3 für LED_RED, LED_GREEN, LED_BLUE */
-		public static final short Echo = 1;
-		public static final short LedOn = 2;
-		public static final short LedOff = 3;
-		public static final short LedToggle = 4;
+		public static final short S_OK = 1;
+		/* Argument 1 = red, green, blue für LED_RED, LED_GREEN, LED_BLUE */
+		public static final short Echo = 2;
+		public static final short LedOn = 3;
+		public static final short LedOff = 4;
+		public static final short LedToggle = 5;
 		/* zusätzlich: Argument 2 = Anzahl > 0 */
-		public static final short LedBlink = 5;
+		public static final short LedBlink = 6;
 		/* Argumente in allnodes.h */
-		public static final short NewMeasure = 6;
-		public static final short StartMeasure = 7;
-		public static final short StopMeasure = 8;
-		public static final short ClearMeasure = 9;
-		public static final short SendReport = 10;
-		public static final short UserCmd = 11;
+		public static final short NewMeasure = 7;
+		public static final short StartMeasure = 8;
+		public static final short StopMeasure = 9;
+		public static final short ClearMeasure = 10;
+		public static final short SendReport = 11;
+		public static final short UserCmd = 12;
+		public static final short DebugOutput = 13;
 	}
 
 	private MoteIF moteIF;
+	private NodeMsg nodeMsgObj;
+	// aktuelles Paket ist unvollständig
+	boolean moreData;
 
 	public MoteConsole(MoteIF moteIF) {
 		this.moteIF = moteIF;
-		this.moteIF.registerListener(new NodeMsg(), this);
+		this.nodeMsgObj = new NodeMsg();
+		this.moteIF.registerListener(this.nodeMsgObj, this);
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -45,6 +51,12 @@ public class MoteConsole implements MessageListener {
 		MoteIF mif = new MoteIF(ps);
 		MoteConsole mc = new MoteConsole(mif);
 		mc.runConsole();
+		// command loop
+		mif.deregisterListener(mc.nodeMsgObj, mc);
+		System.out.println();
+		System.exit(0);
+
+		return;
 	}
 
 	private void runConsole() {
@@ -62,7 +74,7 @@ public class MoteConsole implements MessageListener {
 			dataObj = null;
 
 			// prompt & read
-			System.out.print("> ");
+			//System.out.print("> ");
 			input = sc.nextLine();
 			tokens = input.split(" ");
 
@@ -70,8 +82,12 @@ public class MoteConsole implements MessageListener {
 				continue;
 			}
 
+			// help, exit
 			if (tokens[0].equals("help")) {
 				printHelp();
+			} else if (tokens[0].equals("quit") || tokens[0].equals("exit")) {
+				bContinue = false;
+				continue;
 			}
 
 			// LED commands
@@ -81,7 +97,7 @@ public class MoteConsole implements MessageListener {
 				} else if (tokens[0].equals("ledoff")) {
 					cmd = MoteCommands.LedOff;
 				} else if (tokens[0].equals("ledtoggle")) {
-					cmd = MoteCommands.LedBlink;
+					cmd = MoteCommands.LedToggle;
 				}
 
 				if (tokens[0].equals("ledblink") && tokens.length == 4) {
@@ -92,16 +108,33 @@ public class MoteConsole implements MessageListener {
 				}
 			}
 
+			// Echo command
+			if (tokens[0].equals("echo")) {
+				cmd = MoteCommands.Echo;
+				dataObj = new Pair<short[], Short>();
+				// Command-Token ignorieren
+				dataObj.a = new short[tokens.length - 1];
+				for (int i = 1; i < tokens.length; i++) {
+					dataObj.a[i-1] = Short.parseShort(tokens[i]);
+				}
+				dataObj.b = (short) (tokens.length - 1);
+			}
+
+			// Measure commands
+
+
+			// Misc commands
+
 			if (cmd < 0 || dataObj == null) {
 				System.out.println("invalid command or argument.");
 			} else {
+				if (dataObj.b > 25) { System.out.println("warn: data too long"); }
 				msg.set_cmd(cmd);
 				msg.set_data(dataObj.a);
 				msg.set_length(dataObj.b);
 				try {
 					System.out.println("sending: " + msg.toString());
 					moteIF.send(0, msg);
-					System.out.println("sent");
 				} catch (IOException ex) {
 					System.out.println(ex.toString());
 				}
@@ -109,11 +142,52 @@ public class MoteConsole implements MessageListener {
 
 		} // while (bContinue)
 
+		return;
 	}
 
 	public void messageReceived(int to, Message msg) {
 		NodeMsg nm = (NodeMsg) msg;
-		System.out.println("Received nodemsg.toString(): " + nm.toString());
+		short[] data;
+		short dataLength;
+
+		if (nm == null) {
+			System.out.println("WARN: NULL-packet received.");
+			return;
+		}
+
+		data = nm.get_data();
+		dataLength = nm.get_length();
+
+		switch (nm.get_cmd()) {
+			case MoteCommands.Echo:
+				if (data.length > 0) {
+					System.out.println(String.format("Echo reply from node %d", data[0]));
+				}
+				break;
+
+			case MoteCommands.DebugOutput:
+				if (!moreData) {
+					// neue Meldung
+					System.out.print("Debug: ");
+				}
+
+				// Daten vom letzten Paket ggf. fortsetzen
+				for (int i = 0; i < dataLength; i++) {
+					System.out.print((char) data[i]);
+				}
+
+				if (!moreData) {
+					// alles gesendet - Meldung abschließen
+					System.out.println();
+				}
+				break;
+
+			default:
+				System.out.println("Received nodemsg.toString(): " + nm.toString());
+		}
+
+		moreData = nm.get_moreData() == 0 ? false : true;
+		return;
 	}
 
 	private static void usage() {
@@ -123,10 +197,10 @@ public class MoteConsole implements MessageListener {
 	private static void printHelp() {
 		PrintStream ps = System.out;
 		ps.println("Available commands:");
-		ps.println("ledon ID LED");
-		ps.println("ledoff ID LED");
-		ps.println("ledtoggle ID LED");
-		ps.println("ledblink ID LED times");
+		ps.println("ledon ID (red/green/blue)");
+		ps.println("ledoff ID (red/green/blue)");
+		ps.println("ledtoggle ID (red/green/blue)");
+		ps.println("ledblink ID (red/green/blue) times");
 	}
 
 	private static Pair<short[], Short> getDataForCmd(short cmd, String... args) {
@@ -141,12 +215,12 @@ public class MoteConsole implements MessageListener {
 			case MoteCommands.LedOff:
 			case MoteCommands.LedToggle:
 				data[0] = Short.parseShort(args[0]); // ID
-				data[1] = Short.parseShort(args[1]); // LED
+				data[1] = ledFromString(args[1]); // LED
 				len = 2;
 				break;
 			case MoteCommands.LedBlink:
 				data[0] = Short.parseShort(args[0]); // ID
-				data[1] = Short.parseShort(args[1]); // LED
+				data[1] = ledFromString(args[1]); // LED
 				data[2] = Short.parseShort(args[2]); // # times
 				len = 3;
 				break;
@@ -167,6 +241,18 @@ public class MoteConsole implements MessageListener {
 		result.a = data;
 		result.b = len;
 		return result;
+	}
+
+	private static short ledFromString(String s) {
+		if (s.equals("red")) {
+			return 1;
+		} else if (s.equals("green")) {
+			return 2;
+		} else if (s.equals("blue")) {
+			return 4;
+		}
+
+		return 0;
 	}
 
 	private static class Pair<T1, T2> {
