@@ -28,6 +28,7 @@ implementation
 	
 	char disp_buf[BUF_LEN];
 	char node_id[3];
+	char stopcount = -1;
     
 	task void request(void)
     {
@@ -51,6 +52,7 @@ implementation
     
     task void lcdFound(void)
     {
+    	//call Leds.led1Toggle();
     	signal LcdControl.lcdEnabled();
     }
 
@@ -61,6 +63,16 @@ implementation
 	async event void Alarm.fired()
 	{
 		call Leds.led0Toggle();
+		
+		if(stopcount==0) {
+			stop = TRUE;
+			stopcount= -1;
+			first_receive = TRUE;
+			lcd_present = FALSE;
+			boot = TRUE;
+		} else if(stopcount > 0)
+			stopcount--;
+			
 		if(boot) {
 			post request();
 			boot = FALSE;
@@ -73,24 +85,26 @@ implementation
     /* Wenn wir den UART haben: */
     event void Resource.granted()
     {
+    	/*Machen wir uns bereit zu empfangen und senden dann die gepufferten Daten*/
     	call UartStream.enableReceiveInterrupt();
     	call UartStream.send((uint8_t*) disp_buf, BUF_LEN);
     }
 
     async event void UartStream.sendDone(uint8_t *buf, uint16_t len, error_t error)
     {
-    	call Leds.led2Toggle();
+    	//zuruecksetzen der Special Cmds
     	atomic disp_buf[34] = 0;
     	atomic disp_buf[35] = 0;
     	atomic disp_buf[36] = 0;
     	
     }
 
-
+	//Wir haben was gesendet bekommen!
     async event void UartStream.receivedByte(uint8_t byte)
     {
-    	call Leds.led1Toggle();
+    	//Jetzt erstmal "Ohren zu"
     	call UartStream.disableReceiveInterrupt();
+        //Reagieren
         switch (byte) {
             case LCD_BUTTON1:
                 post button1();
@@ -107,8 +121,10 @@ implementation
             default:
             break;
         }
+        //und den UART brauchen wir dann erstmal nichtmehr
         call Resource.release();
         
+        //Das erste mal den LCD gefunden
         if(lcd_present && first_receive) {
         	post lcdFound();
         	atomic first_receive = FALSE;
@@ -135,7 +151,7 @@ implementation
 	}
 	
 	command void LcdControl.disable(void) {
-		atomic stop = TRUE;
+		atomic stopcount = 5;
 	}
     
     command void LcdControl.puts(const char *s, uint8_t line_no)

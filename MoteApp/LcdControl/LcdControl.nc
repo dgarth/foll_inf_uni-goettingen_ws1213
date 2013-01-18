@@ -1,15 +1,20 @@
 interface LcdControl
 {
+  /*Button-events*/
   event void button1Pressed(void);
   event void button2Pressed(void);
+  /*Communication established ;)*/
   event void lcdEnabled(void);
-  //event void lcdReady(void);
-  //command void buttonRequest(void);
+  
+  /*Einen String auf dem Disp (im naechsten Durchlauf) ausgeben*/
   command void puts(const char *s, uint8_t line);
+  /*Pieps*/
   command void beep(void);
+  /*Leds am Board*/
   command void led0Toggle(void);
   command void led1Toggle(void);
-  //command void checkReady();
+  /*Kommunikation mit LCD ein (alle 100 ms)*/
   command void enable(void);
+  /*wieder abschalten*/
   command void disable(void);
 }
