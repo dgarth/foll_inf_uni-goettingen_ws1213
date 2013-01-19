@@ -22,14 +22,15 @@ usage:
         h   = int16_t   H   = uint16_t
         i   = int32_t   I   = uint32_t
         l   = int64_t   L   = uint64_t
+        _   = skip one byte (mainly useful for unpacking)
 
     example:
         uint8_t a;
         uint16_t b = 1337;
         int32_t c = -12345678;
 
-        pack(buf, "BHi", 255, b, c);
-        unpack(buf, "BHi", &a, &b, &c);
+        pack(buf, "BBHi", 255, 0, b, c);
+        unpack(buf, "B_Hi", &a, &b, &c);
 
         assert(a == 255);
         assert(b == 1337);
@@ -73,6 +74,10 @@ static size_t name(c uint8_t *buf, const char *fmt, ...)    \
                                                             \
             CASE('l', int64_t, int64_t);                    \
             CASE('L', uint64_t, uint64_t);                  \
+                                                            \
+            case '_':                                       \
+                sz = 1;                                     \
+                break;                                      \
                                                             \
             default:                                        \
                 va_end(ap);                                 \
@@ -146,6 +151,18 @@ static uint64_t buffer_get(const uint8_t *buffer, size_t bytes)
 int main(void)
 {
     uint8_t buf[100];
+
+    uint16_t a = 32103, a2;
+    uint32_t b = 532392001, b2;
+
+    pack(buf, "bHI", 0, a, b);
+    unpack(buf, "_HI", &a2, &b2);
+    printf("%" PRIu16 " %" PRIu32 "\n", a, b);
+    printf("%" PRIu16 " %" PRIu32 "\n", a2, b2);
+
+    assert(a == a2);
+    assert(b == b2);
+
 
 #define test(T, FMT, PRI, TMIN, TMAX)       \
 {                                           \
