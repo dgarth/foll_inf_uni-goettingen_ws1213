@@ -93,22 +93,22 @@ static size_t name(c uint8_t *buf, const char *fmt, ...)    \
     return total;                                           \
 }
 
-#define CASE_PACK(chr, ap_type, type)       \
-    case chr:                               \
-        {                                   \
-            type val = va_arg(ap, ap_type); \
-            sz = sizeof (type);             \
-            buffer_put(buf, val, sz);       \
-        }                                   \
+#define CASE_PACK(chr, ap_type, type)                       \
+    case chr:                                               \
+        {                                                   \
+            type val = va_arg(ap, ap_type);                 \
+            sz = sizeof (type);                             \
+            buffer_put(buf, val, sz);                       \
+        }                                                   \
         break
 
-#define CASE_UNPACK(chr, ap_type, type)     \
-    case chr:                               \
-        {                                   \
-            type *p = va_arg(ap, type*);    \
-            sz = sizeof (type);             \
-            *p = buffer_get(buf, sz);       \
-        }                                   \
+#define CASE_UNPACK(chr, ap_type, type)                     \
+    case chr:                                               \
+        {                                                   \
+            type *p = va_arg(ap, type*);                    \
+            sz = sizeof (type);                             \
+            *p = buffer_get(buf, sz);                       \
+        }                                                   \
         break
 
 
@@ -164,13 +164,13 @@ int main(void)
     assert(b == b2);
 
 
-#define test(T, FMT, PRI, TMIN, TMAX)       \
-{                                           \
-    T a = TMIN, b = TMAX, a2, b2;           \
-    pack(buf, FMT FMT, a, b);               \
-    unpack(buf, FMT FMT, &a2, &b2);         \
-    assert(a == a2);                        \
-    assert(b == b2);                        \
+#define test(T, FMT, PRI, TMIN, TMAX)                       \
+{                                                           \
+    T a = TMIN, b = TMAX, a2, b2;                           \
+    pack(buf, FMT FMT, a, b);                               \
+    unpack(buf, FMT FMT, &a2, &b2);                         \
+    assert(a == a2);                                        \
+    assert(b == b2);                                        \
 }
 
     test(uint64_t, "L", PRIu64, 0, UINT64_MAX);
