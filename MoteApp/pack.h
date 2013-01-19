@@ -75,6 +75,7 @@ static size_t name(c uint8_t *buf, const char *fmt, ...)    \
             CASE('L', uint64_t, uint64_t);                  \
                                                             \
             default:                                        \
+                va_end(ap);                                 \
                 return total;                               \
         }                                                   \
                                                             \
