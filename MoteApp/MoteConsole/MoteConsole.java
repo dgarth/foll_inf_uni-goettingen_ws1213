@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Scanner;
+import java.util.Arrays;
 
 import net.tinyos.message.*;
 import net.tinyos.packet.*;
@@ -27,32 +28,52 @@ public class MoteConsole implements MessageListener {
 		public static final short DebugOutput = 13;
 	}
 
+	private class Pair<T1, T2> {
+		public T1 a;
+		public T2 b;
+	}
+
+	private boolean debug;
 	private MoteIF moteIF;
 	private NodeMsg nodeMsgObj;
 	// aktuelles Paket ist unvollständig
 	boolean moreData;
 
 	public MoteConsole(MoteIF moteIF) {
+		this.debug = false;
 		this.moteIF = moteIF;
 		this.nodeMsgObj = new NodeMsg();
-		this.moteIF.registerListener(this.nodeMsgObj, this);
+		if (moteIF != null) {
+			this.moteIF.registerListener(this.nodeMsgObj, this);
+		}
 	}
 
 	public static void main(String[] args) throws Exception {
-
-		if (!(args.length == 2 && args[0].equals("-comm"))) {
-			usage();
-			System.exit(1);
-		}
- 
 		PhoenixSource ps;
-		ps = BuildSource.makePhoenix(args[1], PrintStreamMessenger.err);
+		MoteIF mif = null;
+		int commParam = Arrays.asList(args).indexOf("-comm");
+		int dbgParam = Arrays.asList(args).indexOf("-debug");
 
-		MoteIF mif = new MoteIF(ps);
+		if (commParam > -1) {
+			ps = BuildSource.makePhoenix(args[commParam + 1], PrintStreamMessenger.err);
+			mif = new MoteIF(ps);
+		} else {
+			System.out.println("No device specified. Using local mode.");
+		}
+
 		MoteConsole mc = new MoteConsole(mif);
-		mc.runConsole();
+
+		if (dbgParam > -1) {
+			mc.debug = true;
+			System.out.println("Debug mode enabled.");
+		}
+
 		// command loop
-		mif.deregisterListener(mc.nodeMsgObj, mc);
+		mc.runConsole();
+
+		if (mif != null) {
+			mif.deregisterListener(mc.nodeMsgObj, mc);
+		}
 		System.out.println();
 		System.exit(0);
 
@@ -74,7 +95,7 @@ public class MoteConsole implements MessageListener {
 			dataObj = null;
 
 			// prompt & read
-			//System.out.print("> ");
+			System.out.print("> ");
 			input = sc.nextLine();
 			tokens = input.split(" ");
 
@@ -85,46 +106,49 @@ public class MoteConsole implements MessageListener {
 			// help, exit
 			if (tokens[0].equals("help")) {
 				printHelp();
+				continue;
 			} else if (tokens[0].equals("quit") || tokens[0].equals("exit")) {
 				bContinue = false;
 				continue;
 			}
 
-			// LED commands
+			// Command determination
 			if (tokens[0].startsWith("led")) {
-				if (tokens[0].equals("ledon") && tokens.length == 3) {
+				// LED commands
+				if (tokens[0].equals("ledon")) {
 					cmd = MoteCommands.LedOn;
 				} else if (tokens[0].equals("ledoff")) {
 					cmd = MoteCommands.LedOff;
 				} else if (tokens[0].equals("ledtoggle")) {
 					cmd = MoteCommands.LedToggle;
-				}
-
-				if (tokens[0].equals("ledblink") && tokens.length == 4) {
+				} else if (tokens[0].equals("ledblink")) {
 					cmd = MoteCommands.LedBlink;
-					dataObj = getDataForCmd(cmd, tokens[1], tokens[2], tokens[3]);
-				} else {
-					dataObj = getDataForCmd(cmd, tokens[1], tokens[2]);
 				}
-			}
 
-			// Echo command
-			if (tokens[0].equals("echo")) {
+			} else if (tokens[0].equals("echo")) {
+				// Echo command
 				cmd = MoteCommands.Echo;
-				dataObj = new Pair<short[], Short>();
-				// Command-Token ignorieren
-				dataObj.a = new short[tokens.length - 1];
-				for (int i = 1; i < tokens.length; i++) {
-					dataObj.a[i-1] = Short.parseShort(tokens[i]);
+
+			} else if (tokens[0].equals("newmeasure")) {
+				// NewMeasure command
+				cmd = MoteCommands.NewMeasure;
+
+			} else if (tokens[0].endsWith("ms")) {
+				// Measure control commands
+				if (tokens[0].equals("startms")) {
+					cmd = MoteCommands.StartMeasure;
+				} else if (tokens[0].equals("stopms")) {
+					cmd = MoteCommands.StopMeasure;
+				} else if (tokens[0].equals("clearms")) {
+					cmd = MoteCommands.ClearMeasure;
 				}
-				dataObj.b = (short) (tokens.length - 1);
 			}
 
-			// Measure commands
+			// Data determination (shift command away)
+			tokens = Arrays.copyOfRange(tokens, 1, tokens.length);
+			dataObj = getDataForCmd(cmd, tokens);
 
-
-			// Misc commands
-
+			// Transmit request
 			if (cmd < 0 || dataObj == null) {
 				System.out.println("invalid command or argument.");
 			} else {
@@ -133,8 +157,10 @@ public class MoteConsole implements MessageListener {
 				msg.set_data(dataObj.a);
 				msg.set_length(dataObj.b);
 				try {
-					System.out.println("sending: " + msg.toString());
-					moteIF.send(0, msg);
+					if (debug) { System.out.println("sending: " + msg.toString()); }
+					if (this.moteIF != null) {
+						moteIF.send(0, msg);
+					}
 				} catch (IOException ex) {
 					System.out.println(ex.toString());
 				}
@@ -143,6 +169,123 @@ public class MoteConsole implements MessageListener {
 		} // while (bContinue)
 
 		return;
+	}
+
+	private Pair<short[], Short> getDataForCmd(short cmd, String... args) {
+		Pair<short[], Short> result = new Pair<short[], Short>();
+		short data[] = new short[25];
+		short len = 0;
+
+		switch (cmd) {
+			case MoteCommands.Echo:
+				if (args.length == 0 || args.length > 25) { return null; }
+				for (int i = 0; i < args.length; i++) {
+					data[i] = Short.parseShort(args[i]);
+				}
+				len = (short) (args.length);
+				break;
+
+			case MoteCommands.LedOn:
+			case MoteCommands.LedOff:
+			case MoteCommands.LedToggle:
+				if (args.length != 2) { return null; }
+				data[0] = Short.parseShort(args[0]); // ID
+				data[1] = ledFromString(args[1]); // LED
+				len = 2;
+				break;
+
+			case MoteCommands.LedBlink:
+				if (args.length != 3) { return null; }
+				data[0] = Short.parseShort(args[0]); // ID
+				data[1] = ledFromString(args[1]); // LED
+				data[2] = Short.parseShort(args[2]); // # times
+				len = 3;
+				break;
+
+			case MoteCommands.NewMeasure:
+				if (args.length < 4 || args.length > 5) { return null; }
+				data[0] = Short.parseShort(args[0]);
+				data[1] = Short.parseShort(args[1]);
+				storeWORD(Short.parseShort(args[2]), data, 2);
+				storeDWORD(Integer.parseInt(args[3]), data, 4);
+				len = 8;
+
+				if (args.length == 5) {
+					len = (short) storeOptions(args[4], data, len);
+				}
+
+				break;
+
+			case MoteCommands.StartMeasure:
+			case MoteCommands.StopMeasure:
+			case MoteCommands.ClearMeasure:
+				if (args.length != 2) { return null; }
+				data[0] = Short.parseShort(args[0]); // ID1
+				data[1] = Short.parseShort(args[1]); // ID2
+				len = 2;
+				break;
+		}
+
+		result.a = data;
+		result.b = len;
+		return result;
+	}
+
+	private short ledFromString(String s) {
+		if (s.equals("red")) {
+			return 1;
+		} else if (s.equals("green")) {
+			return 2;
+		} else if (s.equals("blue")) {
+			return 4;
+		}
+
+		return 0;
+	}
+
+	private int storeOptions(String opts, short[] store, int offset) {
+		// opts = "opt1=value1,opt2=value2"
+		String[] options = opts.split(",");
+		int optCount = 0;
+		int optCountOffset = 0;
+		String[] kvOpt; // keyValue
+
+		if (options.length == 0) {
+			return offset;
+		} else {
+			optCountOffset = offset;
+			offset++;
+		}
+
+		for (int i = 0; i < options.length; i++) {
+			// evaluate key/value pair
+			kvOpt = options[i].split("=");
+
+			if (kvOpt[0].equals("mcount")) {
+				// makeDWORD(hi, lo), lo = option 1 (allnodes.h)
+				int dw = makeDWORD(Short.parseShort(kvOpt[1]), (short)1);
+				System.out.println("dw = " + dw);
+				storeDWORD(makeDWORD(Short.parseShort(kvOpt[1]), (short)1), store, offset);
+				if (debug) { System.out.println("mcount option at " + offset + ", value = " + kvOpt[1]); }
+				offset += 4;
+				optCount++;
+			} else if (kvOpt[0].equals("mnode")) {
+				// makeDWORD(hi, lo), lo = option 2 (allnodes.h)
+				int dw = makeDWORD(Short.parseShort(kvOpt[1]), (short)2);
+				System.out.println("dw = " + dw);
+				storeDWORD(makeDWORD(Short.parseShort(kvOpt[1]), (short)2), store, offset);
+				if (debug) { System.out.println("mnode option at " + offset + ", value = " + kvOpt[1]); }
+				offset += 4;
+				optCount++;
+			}
+		}
+
+		store[optCountOffset] = (short) optCount;
+		if (debug) {
+			System.out.println(String.format("option count %d at %d", optCount, optCountOffset));
+		}
+
+		return offset;
 	}
 
 	public void messageReceived(int to, Message msg) {
@@ -159,11 +302,20 @@ public class MoteConsole implements MessageListener {
 		dataLength = nm.get_length();
 
 		switch (nm.get_cmd()) {
+			case MoteCommands.S_OK:
+				System.out.println("OK");
+				break;
+
 			case MoteCommands.Echo:
 				if (data.length > 0) {
 					System.out.println(String.format("Echo reply from node %d", data[0]));
 				}
 				break;
+
+			case MoteCommands.SendReport:
+				String fmt = String.format("Measure set %d from [%d --> %d] at %d, RSSI = %d",
+				getWORD(data, 1), data[8], data[0], getDWORD(data, 3), data[7]);
+				System.out.println(fmt);
 
 			case MoteCommands.DebugOutput:
 				if (!moreData) {
@@ -183,81 +335,70 @@ public class MoteConsole implements MessageListener {
 				break;
 
 			default:
-				System.out.println("Received nodemsg.toString(): " + nm.toString());
+				System.out.println("WARN: Received undefined message.");
+				if (debug) { System.out.println("Undefined: " + nm.toString()); }
 		}
 
 		moreData = nm.get_moreData() == 0 ? false : true;
 		return;
 	}
 
-	private static void usage() {
-		System.err.println("usage: MoteConsole -comm <source>");
-	}
-
-	private static void printHelp() {
+	private void printHelp() {
 		PrintStream ps = System.out;
 		ps.println("Available commands:");
-		ps.println("ledon ID (red/green/blue)");
-		ps.println("ledoff ID (red/green/blue)");
-		ps.println("ledtoggle ID (red/green/blue)");
-		ps.println("ledblink ID (red/green/blue) times");
+		ps.println("echo ID [further IDs]");
+		ps.println("ledon ID red/green/blue");
+		ps.println("ledoff ID red/green/blue");
+		ps.println("ledtoggle ID red/green/blue");
+		ps.println("ledblink ID red/green/blue times");
+		ps.println("newmeasure ID1 ID2 measure_set stime [opt1=value1,opt2=value2,...]");
+		ps.println("newmeasure options:");
+		ps.println("   mcount (measurement count, uint16)");
+		ps.println("   mnode (monitor node ID, uint8)");
+		ps.println("startms ID1 ID2");
+		ps.println("stopms ID1 ID2");
+		ps.println("clearms ID1 ID2");
 	}
 
-	private static Pair<short[], Short> getDataForCmd(short cmd, String... args) {
-		Pair<short[], Short> result = new Pair<short[], Short>();
-		short data[] = new short[25];
-		short len = 0;
+	private short loword(int dword) {
+		return (short) dword;
+	}
 
-		switch (cmd) {
-			case MoteCommands.Echo:
-				break;
-			case MoteCommands.LedOn:
-			case MoteCommands.LedOff:
-			case MoteCommands.LedToggle:
-				data[0] = Short.parseShort(args[0]); // ID
-				data[1] = ledFromString(args[1]); // LED
-				len = 2;
-				break;
-			case MoteCommands.LedBlink:
-				data[0] = Short.parseShort(args[0]); // ID
-				data[1] = ledFromString(args[1]); // LED
-				data[2] = Short.parseShort(args[2]); // # times
-				len = 3;
-				break;
-			case MoteCommands.NewMeasure:
-				break;
-			case MoteCommands.StartMeasure:
-				break;
-			case MoteCommands.StopMeasure:
-				break;
-			case MoteCommands.ClearMeasure:
-				break;
-			case MoteCommands.SendReport:
-				break;
-			case MoteCommands.UserCmd:
-				break;
+	private short hiword(int dword) {
+		return (short) (dword >> 16);
+	}
+
+	private void storeWORD(short word, short[] store, int index) {
+		store[index + 1] = (short) ((word & 0xFF00) >> 8);
+		store[index] = (short) (word & 0x00FF);
+	}
+
+	private void storeDWORD(int dword, short[] store, int index) {
+		System.out.println("store dword at " + index);
+		System.out.println("loword at " + index);
+		storeWORD(loword(dword), store, index);
+		System.out.println("hiword at " + index+2);
+		storeWORD(hiword(dword), store, index + 2);
+	}
+
+	private int makeDWORD(short hiword, short loword) {
+		return (hiword << 16) & (loword | 0xFFFF0000);
+	}
+
+	private short getWORD(short[] x, int index) {
+		if (x.length < 2) {
+			return 0;
+		} else {
+			return (short) ((x[index + 1] << 8) & x[index]);
 		}
-
-		result.a = data;
-		result.b = len;
-		return result;
 	}
 
-	private static short ledFromString(String s) {
-		if (s.equals("red")) {
-			return 1;
-		} else if (s.equals("green")) {
-			return 2;
-		} else if (s.equals("blue")) {
-			return 4;
+	private int getDWORD(short[] x, int index) {
+		if (x.length < 4) {
+			return 0;
+		} else {
+			return (x[index + 3] << 24) & (x[index + 2] << 16) & (x[index + 1] << 8) & x[index];
 		}
-
-		return 0;
-	}
-
-	private static class Pair<T1, T2> {
-		public T1 a;
-		public T2 b;
 	}
 }
 
