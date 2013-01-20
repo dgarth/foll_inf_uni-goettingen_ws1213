@@ -28,7 +28,7 @@ implementation
 	
 	char disp_buf[BUF_LEN];
 	char node_id[3];
-	char stopcount = -1;
+	signed char stopcount = -1, bootcount=5;
     
 	task void request(void)
     {
@@ -62,22 +62,29 @@ implementation
 	
 	async event void Alarm.fired()
 	{
-		call Leds.led0Toggle();
+		//call Leds.led0Toggle();
 		
-		if(stopcount==0) {
-			stop = TRUE;
-			stopcount= -1;
-			first_receive = TRUE;
-			lcd_present = FALSE;
-			boot = TRUE;
-		} else if(stopcount > 0)
-			stopcount--;
+		if(lcd_present)
+			boot = FALSE;
 			
+		if(bootcount==0 && !lcd_present) {
+			boot = FALSE;
+			call Resource.release();
+			stopcount=0;
+		}
+		
+		if(stopcount==0){
+			call Leds.led2Toggle();
+			stop = TRUE;
+		} else if(stopcount > 0) {
+			stopcount--;
+		} else if(!lcd_present) {
+			bootcount--;
+		}
 		if(boot) {
 			post request();
-			boot = FALSE;
 			call Alarm.start(300);
-		} else if(!stop && lcd_present) {
+		}else if(!stop) {
 			post request();		
 		}
 	}
@@ -107,10 +114,12 @@ implementation
         //Reagieren
         switch (byte) {
             case LCD_BUTTON1:
+            	atomic lcd_present = TRUE;
                 post button1();
             break;
 
             case LCD_BUTTON2:
+            	atomic lcd_present = TRUE;
                 post button2();
             break;
             
@@ -142,7 +151,14 @@ implementation
 	/***************** Commands ********************/
 	
 	command void LcdControl.enable(void) {
-		atomic stop = FALSE;
+		atomic {
+			stop = FALSE;
+			boot = TRUE;
+			bootcount = 5;
+			stopcount= -1;
+			first_receive = TRUE;
+			lcd_present = FALSE;
+		}
 		call LcdControl.puts("Initialising...", 1);
 		itoa(TOS_NODE_ID, node_id, 10);
 		call LcdControl.puts(node_id, 2);
@@ -151,7 +167,7 @@ implementation
 	}
 	
 	command void LcdControl.disable(void) {
-		atomic stopcount = 5;
+		atomic stopcount = 6;
 	}
     
     command void LcdControl.puts(const char *s, uint8_t line_no)
