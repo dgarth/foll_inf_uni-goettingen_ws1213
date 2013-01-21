@@ -10,24 +10,6 @@ import net.tinyos.util.*;
 
 public class MoteConsole implements MessageListener {
 
-	private class MoteCommands {
-		public static final short S_OK = 1;
-		/* Argument 1 = red, green, blue für LED_RED, LED_GREEN, LED_BLUE */
-		public static final short Echo = 2;
-		public static final short LedOn = 3;
-		public static final short LedOff = 4;
-		public static final short LedToggle = 5;
-		/* zusätzlich: Argument 2 = Anzahl > 0 */
-		public static final short LedBlink = 6;
-		/* Argumente in allnodes.h */
-		public static final short NewMeasure = 7;
-		public static final short StartMeasure = 8;
-		public static final short StopMeasure = 9;
-		public static final short ClearMeasure = 10;
-		public static final short SendReport = 11;
-		public static final short DebugOutput = 12;
-	}
-
 	private class Pair<T1, T2> {
 		public T1 a;
 		public T2 b;
@@ -128,31 +110,31 @@ public class MoteConsole implements MessageListener {
 			if (tokens[0].startsWith("led")) {
 				// LED commands
 				if (tokens[0].equals("ledon")) {
-					cmd = MoteCommands.LedOn;
+					cmd = MoteCommands.CMD_LEDON;
 				} else if (tokens[0].equals("ledoff")) {
-					cmd = MoteCommands.LedOff;
+					cmd = MoteCommands.CMD_LEDOFF;
 				} else if (tokens[0].equals("ledtoggle")) {
-					cmd = MoteCommands.LedToggle;
+					cmd = MoteCommands.CMD_LEDTOGGLE;
 				} else if (tokens[0].equals("ledblink")) {
-					cmd = MoteCommands.LedBlink;
+					cmd = MoteCommands.CMD_LEDBLINK;
 				}
 
 			} else if (tokens[0].equals("echo")) {
 				// Echo command
-				cmd = MoteCommands.Echo;
+				cmd = MoteCommands.CMD_ECHO;
 
 			} else if (tokens[0].equals("newmeasure")) {
 				// NewMeasure command
-				cmd = MoteCommands.NewMeasure;
+				cmd = MoteCommands.CMD_NEWMEASURE;
 
 			} else if (tokens[0].endsWith("ms")) {
 				// Measure control commands
 				if (tokens[0].equals("startms")) {
-					cmd = MoteCommands.StartMeasure;
+					cmd = MoteCommands.CMD_STARTMS;
 				} else if (tokens[0].equals("stopms")) {
-					cmd = MoteCommands.StopMeasure;
+					cmd = MoteCommands.CMD_STOPMS;
 				} else if (tokens[0].equals("clearms")) {
-					cmd = MoteCommands.ClearMeasure;
+					cmd = MoteCommands.CMD_CLEARMS;
 				}
 			}
 
@@ -190,7 +172,7 @@ public class MoteConsole implements MessageListener {
 		short len = 0;
 
 		switch (cmd) {
-			case MoteCommands.Echo:
+			case MoteCommands.CMD_ECHO:
 				if (args.length == 0 || args.length > 25) { return null; }
 				for (int i = 0; i < args.length; i++) {
 					data[i] = Short.parseShort(args[i]);
@@ -198,16 +180,16 @@ public class MoteConsole implements MessageListener {
 				len = (short) (args.length);
 				break;
 
-			case MoteCommands.LedOn:
-			case MoteCommands.LedOff:
-			case MoteCommands.LedToggle:
+			case MoteCommands.CMD_LEDON:
+			case MoteCommands.CMD_LEDOFF:
+			case MoteCommands.CMD_LEDTOGGLE:
 				if (args.length != 2) { return null; }
 				data[0] = Short.parseShort(args[0]); // ID
 				data[1] = ledFromString(args[1]); // LED
 				len = 2;
 				break;
 
-			case MoteCommands.LedBlink:
+			case MoteCommands.CMD_LEDBLINK:
 				if (args.length != 3) { return null; }
 				data[0] = Short.parseShort(args[0]); // ID
 				data[1] = ledFromString(args[1]); // LED
@@ -215,7 +197,7 @@ public class MoteConsole implements MessageListener {
 				len = 3;
 				break;
 
-			case MoteCommands.NewMeasure:
+			case MoteCommands.CMD_NEWMEASURE:
 				if (args.length < 4 || args.length > 5) { return null; }
 				data[0] = Short.parseShort(args[0]);
 				data[1] = Short.parseShort(args[1]);
@@ -229,9 +211,9 @@ public class MoteConsole implements MessageListener {
 
 				break;
 
-			case MoteCommands.StartMeasure:
-			case MoteCommands.StopMeasure:
-			case MoteCommands.ClearMeasure:
+			case MoteCommands.CMD_STARTMS:
+			case MoteCommands.CMD_STOPMS:
+			case MoteCommands.CMD_CLEARMS:
 				if (args.length != 2) { return null; }
 				data[0] = Short.parseShort(args[0]); // ID1
 				data[1] = Short.parseShort(args[1]); // ID2
@@ -316,19 +298,19 @@ public class MoteConsole implements MessageListener {
 				outLock.release();
 				break;
 
-			case MoteCommands.Echo:
+			case MoteCommands.CMD_ECHO:
 				if (data.length > 0) {
 					System.out.println(String.format("Echo reply from node %d", data[0]));
 				}
 				break;
 
-			case MoteCommands.SendReport:
+			case MoteCommands.CMD_REPORT:
 				String fmt = String.format("Measure set %d from [%d --> %d] at %d, RSSI = %d",
 				getWORD(data, 1), data[8], data[0], getDWORD(data, 3), data[7]);
 				System.out.println(fmt);
 				break;
 
-			case MoteCommands.DebugOutput:
+			case MoteCommands.DEBUG_OUTPUT:
 				if (!moreData) {
 					// neue Meldung
 					System.out.print("Debug: ");
