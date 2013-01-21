@@ -1,9 +1,28 @@
-default: $(wildcard *.java) NodeMsg.java
-	javac *.java
+default: MoteConsole.java
 
-NodeMsg.java:
-	mig java -target=null -java-classname=NodeMsg allnodes.h node_msg -o NodeMsg.java
+COMMANDS =          \
+	S_OK            \
+	CMD_ECHO        \
+	CMD_LEDON       \
+	CMD_LEDOFF      \
+	CMD_LEDTOGGLE   \
+	CMD_LEDBLINK    \
+	CMD_NEWMEASURE  \
+	CMD_STARTMS     \
+	CMD_STOPMS      \
+	CMD_CLEARMS     \
+	CMD_REPORT      \
+	DEBUG_OUTPUT    \
+
+MoteConsole.java: MoteCommands.java NodeMsg.java
+	javac $@
+
+MoteCommands.java: ../allnodes.h
+	ncg java -target=null -java-classname=$(basename $@ .java) $< $(COMMANDS) -o $@
+
+NodeMsg.java: ../allnodes.h
+	mig java -target=null -java-classname=$(basename $@ .java) $< node_msg -o $@
 
 clean:
-	rm -f NodeMsg.java *.class
+	rm -f NodeMsg.java MoteCommands.java *.class
 
