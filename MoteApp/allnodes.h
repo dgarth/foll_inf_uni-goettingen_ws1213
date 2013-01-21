@@ -47,13 +47,10 @@ enum commands {
        data[0] = ID1 (sending node), uint8
        data[1] = ID2 (receiving node), uint8
        data[2]...data[3] = Messreihe, uint16
-       data[4]...data[7] = Startzeit (ms relativ), uint32
-       data[8] = Anzahl Optionen (uint8)
-       data[9]...data[12] = DWORD (uint32) Option "opt", mit
-       LOWORD(opt) = 0: keine Optionen
-       LOWORD(opt) = 1: Anzahl Messungen in HIWORD(opt)
-       LOWORD(opt) = 2: Monitor Node in HIWORD(opt)
-       ...further Options (uint32) */
+       data[4]...data[5] = Anzahl Messpakete, uint16
+       data[6]...data[7] = Intervall zwischen Messpaketen (ms), uint16
+       -> format "BBHHH"
+     */
 
     CMD_STARTMS,
     /* Start a measure initiated with CMD_NEWMEASURE.
@@ -73,10 +70,12 @@ enum commands {
     CMD_REPORT,
     /* Report a measure result to the sink. Parameters:
        data[0] = ID (reporting node ID), uint8
-       data[1]...data[2] = Messreihe, uint16
-       data[3]...data[6] = Zeit seit Startzeit (ms), uint32
-       data[7] = RSSI value, uint8
-       data[8] = Partner ID (andere ID in CMD_NEWMEASURE), uint8 */
+       data[1] = Partner ID (andere ID in CMD_NEWMEASURE), uint8
+       data[2]...data[3] = Messreihe, uint16
+       data[4]...data[5] = Nummer der Messung, uint16
+       data[6] = RSSI value, uint8
+       -> format "BBHHB"
+     */
 
     DEBUG_OUTPUT,
     /* Print debug output to MoteConsole.
@@ -101,9 +100,5 @@ enum {
 	AM_NODE_MSG = 0x89,
 	AM_MEASURE = 42
 };
-
-/* Makros */
-#define makeWORD(array, index) ((array[index+1] << 8) | array[index])
-#define makeDWORD(array, index) (((uint32_t) array[index+3] << 24) | ((uint32_t) array[index+2] << 16) | (array[index+1] << 8) | array[index])
 
 #endif

@@ -1,7 +1,7 @@
 // Das vi-Syntaxhighlighting funktioniert (bei mir) nur mit diesem seltsamen Kommentar-Konstrukt am Anfang.
 
 /**
-**/
+ **/
 
 #include "allnodes.h"
 #include "pack.h"
@@ -11,132 +11,116 @@ module MoteC {
         interface NodeTools;
         interface Boot;
         interface Measure;
-		interface LcdMenu as Lcd;
+        interface LcdMenu as Lcd;
     }
 }
 
 implementation {
-	uint8_t myID; // eigene ID, festgelegt in booted()
-	uint8_t partnerID; // Messpartner, festgelegt bei CMD_NEWMEASURE
-	uint16_t measureSet; // Messreihe, dito
-	uint32_t startTime; // Startzeit, dito
-	node_msg_t lcdCommand;
+    uint16_t measureSet; // Messreihe
+    struct measure_options measureOpts; // Messoptionen
 
-	/* Prototypes */
-	void handleCommand(node_msg_t *msg);
+    node_msg_t lcdCommand;
+
+    /* Prototypes */
+    void handleCommand(node_msg_t *msg);
 
     event void Boot.booted(void) {
         call NodeTools.serialInit();
-		myID = call NodeTools.myAddress();
-		// Andis LCD ansprechen
-		call Lcd.getUserCmd(&lcdCommand);
+        // Andis LCD ansprechen
+        call Lcd.getUserCmd(&lcdCommand);
     }
-    
-	/* Empfängt Kommandos vom LCD. */
-	event void Lcd.cmd_msg_ready(node_msg_t *cmd) {
-		handleCommand(cmd);
-		call Lcd.getUserCmd(&lcdCommand);
-	}
 
-	/* Empfängt alle Kommandos, die NodeToolsP 
-	 * nicht selbst behandeln kann. */
+    /* Empfängt Kommandos vom LCD. */
+    event void Lcd.cmd_msg_ready(node_msg_t *cmd) {
+        handleCommand(cmd);
+        call Lcd.getUserCmd(&lcdCommand);
+    }
+
+    /* Empfängt alle Kommandos, die NodeToolsP
+     * nicht selbst behandeln kann. */
     event void NodeTools.onSerialCommand(node_msg_t* cmd) {
-		handleCommand(cmd);
-	}
-	// Dissemination receive event handler
+        handleCommand(cmd);
+    }
+    // Dissemination receive event handler
 
     event void Measure.setupDone(error_t error) {
     }
 
     void handleCommand(node_msg_t* cmd) {
-		struct measure_options opts;
-        
-		switch (cmd->cmd) {
-			case CMD_NEWMEASURE:
-				if (myID == cmd->data[0]) {
-					partnerID = cmd->data[1];
-					measureSet = (uint16_t) makeWORD(cmd->data, 2);
-					startTime = (uint32_t) makeDWORD(cmd->data, 4);
-					opts.partner = partnerID;
-					opts.interval = 500;
-					opts.count = 0;
-					call Measure.setup(opts);
-				} else {
-					call NodeTools.debugPrint("newmeasure dissemination");
-					// Nachricht ist nicht für mich selbst - per dissemination weiterleiten
-				}
+        uint8_t id1, id2;
+        bool cmd_ok = FALSE;
 
-				call NodeTools.serialSendOK();
-				break;
+        /* is the command related to a measure? */
+        switch (cmd->cmd) {
+            case CMD_NEWMEASURE:
+            case CMD_STARTMS:
+            case CMD_STOPMS:
+                cmd_ok = TRUE;
+                break;
+            default:
+                call NodeTools.debugPrint("WARN: Undefined command.");
+        }
 
-			case CMD_STARTMS:
-				if (myID == cmd->data[0] && partnerID == cmd->data[1]) {
-					call Measure.start();
-				} else {
-					call NodeTools.debugPrint("startms dissemination");
-					// Nachricht ist nicht für mich selbst - per dissemination weiterleiten
-				}
+        /* am I involved in the measure? */
+        if (cmd_ok) {
+            unpack(cmd->data, "BB", &id1, &id2);
+            if (TOS_NODE_ID != id1 && TOS_NODE_ID != id2) {
+                cmd_ok = FALSE;
+            }
+        }
 
-				call NodeTools.serialSendOK();
-				break;
+        /* the answer to either of the above was NO -> do nothing */
+        if (!cmd_ok) {
+            call NodeTools.serialSendOK();
+            return;
+        }
 
-			case CMD_STOPMS:
-				if (myID == cmd->data[0] && partnerID == cmd->data[1]) {
-					call Measure.stop();
-				} else {
-					call NodeTools.debugPrint("stopms dissemination");
-					// Nachricht ist nicht für mich selbst - per dissemination weiterleiten
-				}
+        switch (cmd->cmd) {
+            case CMD_NEWMEASURE:
+                unpack(cmd->data, "__HHH",
+                        &measureSet,
+                        &measureOpts.count,
+                        &measureOpts.interval
+                      );
 
-				call NodeTools.serialSendOK();
-				break;
+                measureOpts.partner = (TOS_NODE_ID == id1) ? id2 : id1;
+                call Measure.setup(measureOpts);
+                break;
 
-			case CMD_CLEARMS:
-				if (myID == cmd->data[0] && partnerID == cmd->data[1]) {
-					// not implemented (setup, stop und start verwenden)
-				} else {
-					call NodeTools.debugPrint("clearms dissemination");
-					// Nachricht ist nicht für mich selbst - per dissemination weiterleiten
-				}
+            case CMD_STARTMS:
+                call Measure.start();
+                break;
 
-				call NodeTools.serialSendOK();
-				break;
-
-			default:
-				call NodeTools.debugPrint("WARN: Undefined command.");
-				call NodeTools.serialSendOK();
-				break;
-		}
+            case CMD_STOPMS:
+                call Measure.stop();
+                break;
+        }
+        call NodeTools.serialSendOK();
     }
 
-	/* Neue Messung empfangen - Report senden */
+    /* Neue Messung empfangen - Report senden */
     event void Measure.received(uint8_t rssi) {
-		node_msg_t m;
-		uint8_t i;
+        node_msg_t m;
 
-		m.cmd = CMD_REPORT;
-		m.data[0] = myID;
+        m.cmd = CMD_REPORT;
 
-		// Messreihe: data[1...2]
-		m.data[1] = measureSet;
-		m.data[2] = measureSet >> 8;
+        m.length = pack(m.data, "BBHHB",
+                TOS_NODE_ID,
+                measureOpts.partner,
+                measureSet,
+                0,
+                rssi
+                );
 
-		// Timestamp: data[3...6]
-		for (i = 0; i < 4; i++) {
-			m.data[3+i] = 0; //time >> (8 * i);
-		}
-		m.data[7] = rssi;
-		m.data[8] = partnerID;
-		m.length = 9;
-		m.moreData = 0;
+        m.moreData = 0;
 
-		// Report an die MoteConsole senden
-		call NodeTools.enqueueMsg(&m);
-		// Report an das LCD senden
-		call Lcd.showReport(&m);
+        // Report an die MoteConsole senden
+        call NodeTools.enqueueMsg(&m);
+        // Report an das LCD senden
+        call Lcd.showReport(&m);
     }
-    
+
     event void Measure.stopped(void) {
-		call NodeTools.debugPrint("Measure stopped.");
+        call NodeTools.debugPrint("Measure stopped.");
     }
 }
