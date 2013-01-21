@@ -17,10 +17,10 @@ COMMANDS =          \
 MoteConsole.java: MoteCommands.java NodeMsg.java
 	javac $@
 
-MoteCommands.java: allnodes.h
+MoteCommands.java: ../allnodes.h
 	ncg java -target=null -java-classname=$(basename $@ .java) $< $(COMMANDS) -o $@
 
-NodeMsg.java: allnodes.h
+NodeMsg.java: ../allnodes.h
 	mig java -target=null -java-classname=$(basename $@ .java) $< node_msg -o $@
 
 clean:
