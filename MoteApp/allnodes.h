@@ -105,6 +105,7 @@ enum {
 };
 
 /* Makros */
-#define flushMsg(...) printf(__VA_ARGS__);printfflush()
+#define makeWORD(array, index) ((array[index+1] << 8) | array[index])
+#define makeDWORD(array, index) ((array[index+3] << 24) | (array[index+2] << 16) | (array[index+1] << 8) | array[index])
 
 #endif
