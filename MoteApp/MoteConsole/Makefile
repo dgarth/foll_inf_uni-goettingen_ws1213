@@ -1,5 +1,4 @@
-default: $(wildcard *.java) NodeMsg.java MoteCommands.java
-	javac *.java
+default: MoteConsole.java
 
 COMMANDS =          \
 	S_OK            \
@@ -15,6 +14,8 @@ COMMANDS =          \
 	CMD_REPORT      \
 	DEBUG_OUTPUT    \
 
+MoteConsole.java: MoteCommands.java NodeMsg.java
+	javac $@
 
 MoteCommands.java: allnodes.h
 	ncg java -target=null -java-classname=$(basename $@ .java) $< $(COMMANDS) -o $@
