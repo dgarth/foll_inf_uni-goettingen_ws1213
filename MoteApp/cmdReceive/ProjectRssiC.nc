@@ -231,11 +231,6 @@ implementation
                 call Measure.setup(opts);
                 break;
 
-            case CMD_USERCMD:
-                //signal NodeTools.onSerialCommand(newMsg);
-                break;
-                    
-                
 
         }
     }
