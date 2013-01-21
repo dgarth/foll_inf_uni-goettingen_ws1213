@@ -1,9 +1,9 @@
-/* 
+/*
 helper functions to work with bytearrays
 
 usage:
 
-    pack(uint8_t *buf, const char *fmt, ...);
+    pack(nx_uint8_t *buf, const char *fmt, ...);
 
         similar to sprintf():
         put all arguments in "..." into the buffer, according to the format
@@ -39,20 +39,60 @@ usage:
 #ifndef PACK_H
 #define PACK_H
 
+
+#ifdef TEST
+#include <stdint.h>
+typedef uint8_t nx_uint8_t;
+#endif
+
+
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
 
-static size_t pack(uint8_t *buf, const char *fmt, ...);
-static size_t unpack(const uint8_t *buf, const char *fmt, ...);
+static size_t pack_bytes(const char *fmt);
+static size_t pack(nx_uint8_t *buf, const char *fmt, ...);
+static size_t unpack(const nx_uint8_t *buf, const char *fmt, ...);
 
 
-static void buffer_put(uint8_t *buffer, uint64_t value, size_t bytes);
-static uint64_t buffer_get(const uint8_t *buffer, size_t bytes);
+static void buffer_put(nx_uint8_t *buffer, uint64_t value, size_t bytes);
+static uint64_t buffer_get(const nx_uint8_t *buffer, size_t bytes);
 
+static size_t pack_bytes(const char *fmt)
+{
+    size_t bytes = 0;
+    char c;
+    while ((c = *fmt++))
+    {
+        switch (c)
+        {
+            case '_':
+            case 'b':
+            case 'B':
+                bytes += 1;
+                break;
+
+            case 'h':
+            case 'H':
+                bytes += 2;
+                break;
+
+            case 'i':
+            case 'I':
+                bytes += 4;
+                break;
+
+            case 'l':
+            case 'L':
+                bytes += 8;
+                break;
+        }
+    }
+    return bytes;
+}
 
 #define PACK_UNPACK(c, name, CASE)                          \
-static size_t name(c uint8_t *buf, const char *fmt, ...)    \
+static size_t name(c nx_uint8_t *buf, const char *fmt, ...)    \
 {                                                           \
     va_list ap;                                             \
     size_t sz, total = 0;                                   \
@@ -119,7 +159,7 @@ PACK_UNPACK(, pack, CASE_PACK)
 PACK_UNPACK(const, unpack, CASE_UNPACK)
 
 
-static void buffer_put(uint8_t *buffer, uint64_t value, size_t bytes)
+static void buffer_put(nx_uint8_t *buffer, uint64_t value, size_t bytes)
 {
     while (bytes--)
     {
@@ -128,10 +168,10 @@ static void buffer_put(uint8_t *buffer, uint64_t value, size_t bytes)
     }
 }
 
-static uint64_t buffer_get(const uint8_t *buffer, size_t bytes)
+static uint64_t buffer_get(const nx_uint8_t *buffer, size_t bytes)
 {
     uint64_t value = 0;
-    const uint8_t *end = buffer+bytes;
+    const nx_uint8_t *end = buffer+bytes;
 
     while (buffer < end)
     {
@@ -150,15 +190,13 @@ static uint64_t buffer_get(const uint8_t *buffer, size_t bytes)
 
 int main(void)
 {
-    uint8_t buf[100];
+    nx_uint8_t buf[100];
 
     uint16_t a = 32103, a2;
     uint32_t b = 532392001, b2;
 
     pack(buf, "bHI", 0, a, b);
     unpack(buf, "_HI", &a2, &b2);
-    printf("%" PRIu16 " %" PRIu32 "\n", a, b);
-    printf("%" PRIu16 " %" PRIu32 "\n", a2, b2);
 
     assert(a == a2);
     assert(b == b2);
@@ -184,6 +222,9 @@ int main(void)
 
     test(uint8_t,  "B", PRIu8, 0, UINT8_MAX);
     test(int8_t,   "b", PRId8, INT8_MIN, INT8_MAX);
+
+    assert(pack_bytes("bB_") == 3);
+    assert(pack_bytes("HhL") == 2+2+8);
 
     puts("all ok");
     return 0;

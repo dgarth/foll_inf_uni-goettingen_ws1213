@@ -8,8 +8,8 @@ implementation {
 	components NodeToolsP; /* hier wird NodeTools implementiert */
 	NodeTools = NodeToolsP;
 
-	components PrintfC;
-	components SerialStartC;
+	//components PrintfC;
+	//components SerialStartC;
 
 	components LedsC;
 	NodeToolsP.Leds -> LedsC;

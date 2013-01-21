@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Scanner;
 import java.util.Arrays;
+import java.util.concurrent.Semaphore;
 
 import net.tinyos.message.*;
 import net.tinyos.packet.*;
@@ -39,8 +40,12 @@ public class MoteConsole implements MessageListener {
 	// aktuelles Paket ist unvollständig
 	boolean moreData;
 
+	// Synchronisation der Ausgabe
+	Semaphore outLock;
+
 	public MoteConsole(MoteIF moteIF) {
 		this.debug = false;
+		this.outLock = new Semaphore(1);
 		this.moteIF = moteIF;
 		this.nodeMsgObj = new NodeMsg();
 		if (moteIF != null) {
@@ -94,21 +99,29 @@ public class MoteConsole implements MessageListener {
 			cmd = -1;
 			dataObj = null;
 
+			try {
+				outLock.acquire();
+			} catch (InterruptedException ex) {}
+
 			// prompt & read
 			System.out.print("> ");
 			input = sc.nextLine();
 			tokens = input.split(" ");
 
-			if (tokens.length == 0) {
+			// tokens.length ist immer > 0
+			if (tokens[0].equals("")) {
+				outLock.release();
 				continue;
 			}
 
 			// help, exit
 			if (tokens[0].equals("help")) {
 				printHelp();
+				outLock.release();
 				continue;
 			} else if (tokens[0].equals("quit") || tokens[0].equals("exit")) {
 				bContinue = false;
+				outLock.release();
 				continue;
 			}
 
@@ -151,6 +164,7 @@ public class MoteConsole implements MessageListener {
 			// Transmit request
 			if (cmd < 0 || dataObj == null) {
 				System.out.println("invalid command or argument.");
+				outLock.release();
 			} else {
 				if (dataObj.b > 25) { System.out.println("warn: data too long"); }
 				msg.set_cmd(cmd);
@@ -263,16 +277,12 @@ public class MoteConsole implements MessageListener {
 
 			if (kvOpt[0].equals("mcount")) {
 				// makeDWORD(hi, lo), lo = option 1 (allnodes.h)
-				int dw = makeDWORD(Short.parseShort(kvOpt[1]), (short)1);
-				System.out.println("dw = " + dw);
 				storeDWORD(makeDWORD(Short.parseShort(kvOpt[1]), (short)1), store, offset);
 				if (debug) { System.out.println("mcount option at " + offset + ", value = " + kvOpt[1]); }
 				offset += 4;
 				optCount++;
 			} else if (kvOpt[0].equals("mnode")) {
 				// makeDWORD(hi, lo), lo = option 2 (allnodes.h)
-				int dw = makeDWORD(Short.parseShort(kvOpt[1]), (short)2);
-				System.out.println("dw = " + dw);
 				storeDWORD(makeDWORD(Short.parseShort(kvOpt[1]), (short)2), store, offset);
 				if (debug) { System.out.println("mnode option at " + offset + ", value = " + kvOpt[1]); }
 				offset += 4;
@@ -304,6 +314,7 @@ public class MoteConsole implements MessageListener {
 		switch (nm.get_cmd()) {
 			case MoteCommands.S_OK:
 				System.out.println("OK");
+				outLock.release();
 				break;
 
 			case MoteCommands.Echo:
@@ -369,27 +380,24 @@ public class MoteConsole implements MessageListener {
 	}
 
 	private void storeWORD(short word, short[] store, int index) {
-		store[index + 1] = (short) ((word & 0xFF00) >> 8);
-		store[index] = (short) (word & 0x00FF);
+		store[index + 1] = (short) (word >> 8);
+		store[index] = (short) (word & 0xFF);
 	}
 
 	private void storeDWORD(int dword, short[] store, int index) {
-		System.out.println("store dword at " + index);
-		System.out.println("loword at " + index);
 		storeWORD(loword(dword), store, index);
-		System.out.println("hiword at " + index+2);
 		storeWORD(hiword(dword), store, index + 2);
 	}
 
 	private int makeDWORD(short hiword, short loword) {
-		return (hiword << 16) & (loword | 0xFFFF0000);
+		return (hiword << 16) | loword;
 	}
 
 	private short getWORD(short[] x, int index) {
 		if (x.length < 2) {
 			return 0;
 		} else {
-			return (short) ((x[index + 1] << 8) & x[index]);
+			return (short) ((x[index + 1] << 8) | x[index]);
 		}
 	}
 
@@ -397,7 +405,7 @@ public class MoteConsole implements MessageListener {
 		if (x.length < 4) {
 			return 0;
 		} else {
-			return (x[index + 3] << 24) & (x[index + 2] << 16) & (x[index + 1] << 8) & x[index];
+			return (x[index + 3] << 24) | (x[index + 2] << 16) | (x[index + 1] << 8) | x[index];
 		}
 	}
 }
