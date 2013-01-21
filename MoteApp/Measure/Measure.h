@@ -3,7 +3,8 @@
 
 enum
 {
-    RSSI_OFFSET = -45
+    RSSI_OFFSET = -45,
+    MEASURE_INTERVAL = 1000,
 };
 
 struct measure_options
@@ -12,7 +13,6 @@ struct measure_options
         partner;
 
     uint16_t
-        interval,
         count;
 };
 

@@ -101,7 +101,7 @@ implementation
         }
 
         running = TRUE;
-        call Timer.startPeriodic(config.interval);
+        call Timer.startPeriodic(MEASURE_INTERVAL);
         return SUCCESS;
     }
 

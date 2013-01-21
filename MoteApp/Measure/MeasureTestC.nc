@@ -1,9 +1,6 @@
-//
+// vim ft=nc
 
-/** Und um einen kommentar zu dokumentieren, macht man einen kommentar oben drueber? :D
-**/
-
-#include "allnodes.h"
+#include "../allnodes.h"
 
 module MeasureTestC {
     uses {
@@ -18,17 +15,14 @@ implementation {
 
     node_msg_t response;
 
-    struct measure_options m_opts = {
-        .partner = 0,
-        .interval = 500,
-        .count = 0,
-    };
+    struct measure_options m_opts;
 
     event void Boot.booted(void) {
         call NodeTools.serialInit();
 
-        /* start bidirectional test series between 1 and 2 */
-        m_opts.partner = TOS_NODE_ID ^ 0x3;
+        /* run infinite test series between nodes 1 and 2 */
+        m_opts.partner = TOS_NODE_ID ^ 0x3,
+        m_opts.count = 0,
         call Measure.setup(m_opts);
     }
     
