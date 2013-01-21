@@ -3,7 +3,7 @@
 /**
 **/
 
-#include "allnodes.h"
+#include "../allnodes.h"
 #define QUEUE_LEN 10
 
 module NodeToolsP {
