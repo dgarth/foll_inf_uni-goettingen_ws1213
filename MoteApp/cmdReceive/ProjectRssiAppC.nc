@@ -52,7 +52,7 @@ implementation
     */
     components CollectionC as Collector;
     components new CollectionSenderC(0xee);
-    ProjectRssiC.RoutingControl as Collector;
+    ProjectRssiC.RoutingControl -> Collector;
     ProjectRssiC.ColSend -> CollectionSenderC;
     ProjectRssiC.RootControl -> Collector;
     ProjectRssiC.ColReceive -> Collector.Receive[0xee];

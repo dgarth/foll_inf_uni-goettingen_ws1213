@@ -38,6 +38,7 @@ module ProjectRssiC @safe()
     uses interface StdControl as RoutingControl;
     uses interface Send as ColSend;
     uses interface Receive as ColReceive;
+    uses interface RootControl;
 
     
 }
@@ -106,7 +107,7 @@ implementation
         };
         call Measure.setup(serialOpts);
     }
-    event void Measure.received(uint8_t rssi, uint32_t time) {
+    event void Measure.received(uint8_t rssi) {
         //call NodeTools.sendResponse(NULL);
     }
     event void Measure.stopped(void) {
@@ -154,6 +155,10 @@ implementation
                 busy = TRUE;
             }
         }*/
+    }
+    
+    event void ColSend.sendDone(message_t *msg, error_t error) {
+
     }
 
     event void AMSend.sendDone(message_t *msg, error_t error)
@@ -234,6 +239,10 @@ implementation
 
         }
     }
+    event message_t *ColReceive.receive(message_t *msg, void *payload, uint8_t len){
+        return msg;
+    }
+    
     
     event message_t *Receive.receive(message_t *msg, void *payload, uint8_t len)
     {
