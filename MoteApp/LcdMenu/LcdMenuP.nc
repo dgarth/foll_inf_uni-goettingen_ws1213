@@ -79,9 +79,9 @@ implementation {
 		cmd_msg->cmd = cmdType;
 		cmd_msg->data[0]=id1;
 		cmd_msg->data[1]=id2;
-		pack((uint8_t *)cmd_msg->data+2, "H", mid);
+		pack(cmd_msg->data+2, "H", mid);
 		cmd_msg->data[8]=2;
-		pack((uint8_t *)cmd_msg->data+9, "H", quantity);
+		pack(cmd_msg->data+9, "H", quantity);
 		cmd_msg->data[12]=1;
 		cmd_msg->data[16]=2;
 		cmd_msg->data[14]=TOS_NODE_ID;
@@ -138,8 +138,8 @@ implementation {
 		memset(linebuf1, ' ', 16);
 		memset(linebuf2, ' ', 16);
 		
-		unpack((uint8_t*) rep_msg->data+1, "H", &mr);
-		unpack((uint8_t*) rep_msg->data+3, "I", &t);
+		unpack(rep_msg->data+1, "H", &mr);
+		unpack(rep_msg->data+3, "I", &t);
 		
 		snprintf(linebuf1, 16, "N1:%u N2:%u M:%u", rep_msg->data[0], rep_msg->data[8], mr);
 		snprintf(linebuf2, 16, "R:%u T:%lu", rep_msg->data[7], time);
