@@ -9,77 +9,79 @@
 #define LED_BLUE 4
 
 /*** Kommandos ***/
-#define S_OK 1
-/* Generic "OK" packet.
-Parameters: None. */
+enum commands {
+    S_OK = 1,
+    /* Generic "OK" packet.
+       Parameters: None. */
 
-#define CMD_ECHO 2
-/* Echo request & response.
-Request Parameters:
-data = ID list (multiping), uint8[]
-Response parameters:
-data[0] = ID (cc2420 address) */
+    CMD_ECHO,
+    /* Echo request & response.
+       Request Parameters:
+       data = ID list (multiping), uint8[]
+       Response parameters:
+       data[0] = ID (cc2420 address) */
 
-#define CMD_LEDON 3
-/* Switch LED on. Parameters:
-data[0] = target ID, uint8
-data[1] = LED (0, 1, 2), uint8 */
+    CMD_LEDON,
+    /* Switch LED on. Parameters:
+       data[0] = target ID, uint8
+       data[1] = LED (0, 1, 2), uint8 */
 
-#define CMD_LEDOFF 4
-/* Switch LED off. Parameters:
-data[0] = target ID, uint8
-data[1] = LED (0, 1, 2), uint8 */
+    CMD_LEDOFF,
+    /* Switch LED off. Parameters:
+       data[0] = target ID, uint8
+       data[1] = LED (0, 1, 2), uint8 */
 
-#define CMD_LEDTOGGLE 5
-/* Toggle LED. Parameters:
-data[0] = target ID, uint8
-data[1] = LED (0, 1, 2), uint8 */
+    CMD_LEDTOGGLE,
+    /* Toggle LED. Parameters:
+       data[0] = target ID, uint8
+       data[1] = LED (0, 1, 2), uint8 */
 
-#define CMD_LEDBLINK 6
-/* Blink (flash) LED. Parameters:
-data[0] = target ID, uint8
-data[1] = LED (0, 1, 2), uint8
-data[2] = blink count, uint8 */
+    CMD_LEDBLINK,
+    /* Blink (flash) LED. Parameters:
+       data[0] = target ID, uint8
+       data[1] = LED (0, 1, 2), uint8
+       data[2] = blink count, uint8 */
 
-#define CMD_NEWMEASURE 7
-/* Initiate a new measure between two nodes. Parameters:
-data[0] = ID1 (sending node), uint8
-data[1] = ID2 (receiving node), uint8
-data[2]...data[3] = Messreihe, uint16
-data[4]...data[7] = Startzeit (ms relativ), uint32
-data[8] = Anzahl Optionen (uint8)
-data[9]...data[12] = DWORD (uint32) Option "opt", mit
-LOWORD(opt) = 0: keine Optionen
-LOWORD(opt) = 1: Anzahl Messungen in HIWORD(opt)
-LOWORD(opt) = 2: Monitor Node in HIWORD(opt)
-...further Options (uint32) */
+    CMD_NEWMEASURE,
+    /* Initiate a new measure between two nodes. Parameters:
+       data[0] = ID1 (sending node), uint8
+       data[1] = ID2 (receiving node), uint8
+       data[2]...data[3] = Messreihe, uint16
+       data[4]...data[7] = Startzeit (ms relativ), uint32
+       data[8] = Anzahl Optionen (uint8)
+       data[9]...data[12] = DWORD (uint32) Option "opt", mit
+       LOWORD(opt) = 0: keine Optionen
+       LOWORD(opt) = 1: Anzahl Messungen in HIWORD(opt)
+       LOWORD(opt) = 2: Monitor Node in HIWORD(opt)
+       ...further Options (uint32) */
 
-#define CMD_STARTMS 8
-/* Start a measure initiated with CMD_NEWMEASURE.
-data[0] = ID1 (sending node), uint8
-data[1] = ID2 (receiving node), uint8 */
+    CMD_STARTMS,
+    /* Start a measure initiated with CMD_NEWMEASURE.
+       data[0] = ID1 (sending node), uint8
+       data[1] = ID2 (receiving node), uint8 */
 
-#define CMD_STOPMS 9
-/* Stop a measure between node1 and node2. Parameters:
-data[0] = ID1 (sending node), uint8
-data[1] = ID2 (receiving node), uint8 */
+    CMD_STOPMS,
+    /* Stop a measure between node1 and node2. Parameters:
+       data[0] = ID1 (sending node), uint8
+       data[1] = ID2 (receiving node), uint8 */
 
-#define CMD_CLEARMS 10
-/* Lose a measure parnership initiated with CMD_NEWMEASURE. Parameters:
-data[0] = ID1 (sending node), uint8
-data[1] = ID2 (receiving node), uint8 */
+    CMD_CLEARMS,
+    /* Lose a measure parnership initiated with CMD_NEWMEASURE. Parameters:
+       data[0] = ID1 (sending node), uint8
+       data[1] = ID2 (receiving node), uint8 */
 
-#define CMD_REPORT 11
-/* Report a measure result to the sink. Parameters:
-data[0] = ID (reporting node ID), uint8
-data[1]...data[2] = Messreihe, uint16
-data[3]...data[6] = Zeit seit Startzeit (ms), uint32
-data[7] = RSSI value, uint8
-data[8] = Partner ID (andere ID in CMD_NEWMEASURE), uint8 */
+    CMD_REPORT,
+    /* Report a measure result to the sink. Parameters:
+       data[0] = ID (reporting node ID), uint8
+       data[1]...data[2] = Messreihe, uint16
+       data[3]...data[6] = Zeit seit Startzeit (ms), uint32
+       data[7] = RSSI value, uint8
+       data[8] = Partner ID (andere ID in CMD_NEWMEASURE), uint8 */
 
-#define DEBUG_OUTPUT 12
-/* Print debug output to MoteConsole.
-data = (string) */
+    DEBUG_OUTPUT,
+    /* Print debug output to MoteConsole.
+       data = (string) */
+};
 
 #define MAX_DATA 25
 
