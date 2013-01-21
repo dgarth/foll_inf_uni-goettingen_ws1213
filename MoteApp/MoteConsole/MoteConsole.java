@@ -25,8 +25,7 @@ public class MoteConsole implements MessageListener {
 		public static final short StopMeasure = 9;
 		public static final short ClearMeasure = 10;
 		public static final short SendReport = 11;
-		public static final short UserCmd = 12;
-		public static final short DebugOutput = 13;
+		public static final short DebugOutput = 12;
 	}
 
 	private class Pair<T1, T2> {
@@ -327,6 +326,7 @@ public class MoteConsole implements MessageListener {
 				String fmt = String.format("Measure set %d from [%d --> %d] at %d, RSSI = %d",
 				getWORD(data, 1), data[8], data[0], getDWORD(data, 3), data[7]);
 				System.out.println(fmt);
+				break;
 
 			case MoteCommands.DebugOutput:
 				if (!moreData) {
@@ -348,6 +348,7 @@ public class MoteConsole implements MessageListener {
 			default:
 				System.out.println("WARN: Received undefined message.");
 				if (debug) { System.out.println("Undefined: " + nm.toString()); }
+				break;
 		}
 
 		moreData = nm.get_moreData() == 0 ? false : true;

@@ -18,7 +18,7 @@ implementation {
 	uint8_t myID; // eigene ID, festgelegt in booted()
 	uint8_t partnerID; // Messpartner, festgelegt bei CMD_NEWMEASURE
 	uint16_t measureSet; // Messreihe, dito
-	uint32_t startTime;
+	uint32_t startTime; // Startzeit, dito
 
     event void Boot.booted(void) {
         call NodeTools.serialInit();
@@ -26,11 +26,9 @@ implementation {
 		// Andis LCD ansprechen
     }
     
-	// Command event von Andis LCD (commt noch)
+	// Command event von Andis LCD (kommt noch)
 
     event void Measure.setupDone(error_t error) {
-		call NodeTools.debugPrint("setup done");
-        call Measure.start();
     }
 
 	/* Empfängt alle Kommandos, die NodeToolsP 
@@ -42,8 +40,8 @@ implementation {
 			case CMD_NEWMEASURE:
 				if (myID == cmd->data[0]) {
 					partnerID = cmd->data[1];
-					//measureSet = makeWORD(data, 2);
-					//startTime = makeDWORD(data, 4);
+					measureSet = makeWORD(cmd->data, 2);
+					startTime = makeDWORD(cmd->data, 4);
 					opts.partner = partnerID;
 					opts.interval = 500;
 					opts.count = 0;
@@ -58,9 +56,10 @@ implementation {
 
 			case CMD_STARTMS:
 				if (myID == cmd->data[0] && partnerID == cmd->data[1]) {
-					// start measure
+					call Measure.start();
 				} else {
 					call NodeTools.debugPrint("startms dissemination");
+					// Nachricht ist nicht für mich selbst - per dissemination weiterleiten
 				}
 
 				call NodeTools.serialSendOK();
@@ -68,9 +67,10 @@ implementation {
 
 			case CMD_STOPMS:
 				if (myID == cmd->data[0] && partnerID == cmd->data[1]) {
-					// stop measure
+					call Measure.stop();
 				} else {
 					call NodeTools.debugPrint("stopms dissemination");
+					// Nachricht ist nicht für mich selbst - per dissemination weiterleiten
 				}
 
 				call NodeTools.serialSendOK();
@@ -78,9 +78,10 @@ implementation {
 
 			case CMD_CLEARMS:
 				if (myID == cmd->data[0] && partnerID == cmd->data[1]) {
-					// clear measure
+					// not implemented (setup, stop und start verwenden)
 				} else {
 					call NodeTools.debugPrint("clearms dissemination");
+					// Nachricht ist nicht für mich selbst - per dissemination weiterleiten
 				}
 
 				call NodeTools.serialSendOK();
@@ -102,15 +103,13 @@ implementation {
 		m.data[0] = myID;
 
 		// Messreihe: data[1...2]
-		m.data[1] = measureSet >> 8;
-		m.data[2] = measureSet;
+		m.data[1] = measureSet;
+		m.data[2] = measureSet >> 8;
 
 		// Timestamp: data[3...6]
-		time += startTime;
 		for (i = 0; i < 4; i++) {
-			m.data[6-i] = time >> (i * 8);
+			m.data[3+i] = time >> (8 * i);
 		}
-
 		m.data[7] = rssi;
 		m.data[8] = partnerID;
 		m.length = 9;

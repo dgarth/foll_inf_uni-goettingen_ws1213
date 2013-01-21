@@ -77,11 +77,7 @@ data[3]...data[6] = Zeit seit Startzeit (ms), uint32
 data[7] = RSSI value, uint8
 data[8] = Partner ID (andere ID in CMD_NEWMEASURE), uint8 */
 
-#define CMD_USERCMD 12
-/* Send user command. Parameters:
-data = command (string) */
-
-#define DEBUG_OUTPUT 13
+#define DEBUG_OUTPUT 12
 /* Print debug output to MoteConsole.
 data = (string) */
 
@@ -106,6 +102,6 @@ enum {
 
 /* Makros */
 #define makeWORD(array, index) ((array[index+1] << 8) | array[index])
-#define makeDWORD(array, index) ((array[index+3] << 24) | (array[index+2] << 16) | (array[index+1] << 8) | array[index])
+#define makeDWORD(array, index) (((uint32_t) array[index+3] << 24) | ((uint32_t) array[index+2] << 16) | (array[index+1] << 8) | array[index])
 
 #endif
