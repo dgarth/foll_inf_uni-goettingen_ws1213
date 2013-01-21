@@ -3,13 +3,12 @@
 /**
 **/
 
-#include "../allnodes.h"
+#include "allnodes.h"
 
-module MeasureTestC {
+module MoteC {
     uses {
         interface NodeTools;
         interface Boot;
-        /*interface Timer<TMilli> as Timer;*/
         interface Measure;
     }
 }
@@ -40,8 +39,8 @@ implementation {
 			case CMD_NEWMEASURE:
 				if (myID == cmd->data[0]) {
 					partnerID = cmd->data[1];
-					measureSet = makeWORD(cmd->data, 2);
-					startTime = makeDWORD(cmd->data, 4);
+					measureSet = (uint16_t) makeWORD(cmd->data, 2);
+					startTime = (uint32_t) makeDWORD(cmd->data, 4);
 					opts.partner = partnerID;
 					opts.interval = 500;
 					opts.count = 0;
