@@ -48,7 +48,7 @@ interface Measure
     /**
      * Signalled when a measure packet was received.
      *
-     * @param <b>rssi</b> measured RSSI value
+     * @param <b>rssi</b> measured RSSI value in [0, 255]
      * @param <b>time</b> time of arrival
      */
     event void received(uint8_t rssi, uint32_t time);
