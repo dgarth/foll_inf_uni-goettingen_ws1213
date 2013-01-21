@@ -15,7 +15,7 @@ implementation
     App.Alarm -> Alarm;
     
     // Komponenten und Wiring fuer UART
-    components new Msp430Uart1C() as UartC;
+    components new Msp430Uart0C() as UartC;
 
     App.Resource -> UartC.Resource;
     App.UartStream -> UartC.UartStream;

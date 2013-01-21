@@ -1,5 +1,5 @@
-#include "allnodes.h"
-#include "pack.h"
+#include "../allnodes.h"
+#include "../pack.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -116,6 +116,7 @@ implementation {
 				finalize();
 				call LcdControl.disable();
 				post done();
+				phase = 0;
 			break;
 			default:
 			break;

@@ -1,4 +1,4 @@
-// Das vi-Syntaxhighlighting funktioniert (bei mir) nur mit diesem seltsamen Kommentar-Konstrukt am Anfang.
+//
 
 /** Und um einen kommentar zu dokumentieren, macht man einen kommentar oben drueber? :D
 **/
