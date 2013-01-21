@@ -1,10 +1,10 @@
-configuration LcdTestAppC
+configuration MenuTestAppC
 {
 }
 
 implementation
 {
-    components LcdTest as App;
+    components MenuTest as App;
 
     components MainC;
     App.Boot -> MainC.Boot;
@@ -12,6 +12,6 @@ implementation
     components LedsC;
     App.Leds -> LedsC;
     
-    components LcdControlC;
-    App.LcdControl -> LcdControlC;
+    components LcdMenuC;
+    App.LcdMenu -> LcdMenuC;
 }

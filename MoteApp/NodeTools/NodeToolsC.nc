@@ -8,8 +8,8 @@ implementation {
 	components NodeToolsP; /* hier wird NodeTools implementiert */
 	NodeTools = NodeToolsP;
 
-	components PrintfC;
-	components SerialStartC;
+	//components PrintfC;
+	//components SerialStartC;
 
 	components LedsC;
 	NodeToolsP.Leds -> LedsC;
@@ -26,6 +26,8 @@ implementation {
 	NodeToolsP.SerialReceive -> SerialAM.Receive[AM_NODE_MSG];
 	NodeToolsP.SerialAMSend -> SerialAM.AMSend[AM_NODE_MSG];
 	NodeToolsP.SerialPacket -> SerialAM;
-	NodeToolsP.AMPacket -> SerialAM;
+
+	components CC2420ActiveMessageC as RadioAM;
+	NodeToolsP.AMPacket -> RadioAM;
 }
 
