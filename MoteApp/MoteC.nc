@@ -4,12 +4,14 @@
 **/
 
 #include "allnodes.h"
+#include "pack.h"
 
 module MoteC {
     uses {
         interface NodeTools;
         interface Boot;
         interface Measure;
+		interface LcdMenu as Lcd;
     }
 }
 
@@ -18,23 +20,35 @@ implementation {
 	uint8_t partnerID; // Messpartner, festgelegt bei CMD_NEWMEASURE
 	uint16_t measureSet; // Messreihe, dito
 	uint32_t startTime; // Startzeit, dito
+	node_msg_t lcdCommand;
+
+	/* Prototypes */
+	void handleCommand(node_msg_t *msg);
 
     event void Boot.booted(void) {
         call NodeTools.serialInit();
 		myID = call NodeTools.myAddress();
 		// Andis LCD ansprechen
+		call Lcd.getUserCmd(&lcdCommand);
     }
     
-	// Command event von Andis LCD (kommt noch)
+	/* Empfängt Kommandos vom LCD. */
+	event void Lcd.cmd_msg_ready(node_msg_t *cmd) {
+		handleCommand(cmd);
+		call Lcd.getUserCmd(&lcdCommand);
+	}
 
+	/* Empfängt alle Kommandos, die NodeToolsP 
+	 * nicht selbst behandeln kann. */
+    event void NodeTools.onSerialCommand(node_msg_t* cmd) {
+		handleCommand(cmd);
+	}
 	// Dissemination receive event handler
 
     event void Measure.setupDone(error_t error) {
     }
 
-	/* Empfängt alle Kommandos, die NodeToolsP 
-	 * nicht selbst behandeln kann. */
-    event void NodeTools.onSerialCommand(node_msg_t* cmd) {
+    void handleCommand(node_msg_t* cmd) {
 		struct measure_options opts;
         
 		switch (cmd->cmd) {
@@ -96,7 +110,7 @@ implementation {
     }
 
 	/* Neue Messung empfangen - Report senden */
-    event void Measure.received(uint8_t rssi, uint32_t time) {
+    event void Measure.received(uint8_t rssi) {
 		node_msg_t m;
 		uint8_t i;
 
@@ -109,14 +123,17 @@ implementation {
 
 		// Timestamp: data[3...6]
 		for (i = 0; i < 4; i++) {
-			m.data[3+i] = time >> (8 * i);
+			m.data[3+i] = 0; //time >> (8 * i);
 		}
 		m.data[7] = rssi;
 		m.data[8] = partnerID;
 		m.length = 9;
 		m.moreData = 0;
-        
+
+		// Report an die MoteConsole senden
 		call NodeTools.enqueueMsg(&m);
+		// Report an das LCD senden
+		call Lcd.showReport(&m);
     }
     
     event void Measure.stopped(void) {

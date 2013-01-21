@@ -1,5 +1,5 @@
-#include "allnodes.h"
-#include "pack.h"
+#include "../allnodes.h"
+#include "../pack.h"
 #include <string.h>
 #include <stdio.h>
 

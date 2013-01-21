@@ -1,4 +1,4 @@
-#include "allnodes.h"
+#include "../allnodes.h"
 
 interface LcdMenu {
 	/*"Menue" (haha) zur Benutzereingabe

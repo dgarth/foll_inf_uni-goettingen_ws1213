@@ -18,4 +18,7 @@ implementation {
 
     components MeasureC;
     App.Measure -> MeasureC;
+
+	components LcdMenuC;
+	App.Lcd -> LcdMenuC;
 }
