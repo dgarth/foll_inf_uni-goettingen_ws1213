@@ -116,6 +116,7 @@ implementation {
 				finalize();
 				call LcdControl.disable();
 				post done();
+				phase = 0;
 			break;
 			default:
 			break;
