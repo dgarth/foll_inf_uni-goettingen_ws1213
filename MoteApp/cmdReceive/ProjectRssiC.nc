@@ -1,7 +1,13 @@
+// Das vi-Syntaxhighlighting funktioniert (bei mir) nur mit diesem seltsamen Kommentar-Konstrukt am Anfang.
+
+/** Und um einen kommentar zu dokumentieren, macht man einen kommentar oben drueber? :D
+**/
 #include "Timer.h"
 #include "CC2420.h"
 
 #include "ProjectRssi.h"
+#include "../allnodes.h"
+#include "../Measure/Measure.h"
 
 #define RED 1
 #define GREEN 2
@@ -21,21 +27,93 @@ module ProjectRssiC @safe()
     uses interface SplitControl as AMControl;
     uses interface Receive;
 
+    uses interface NodeTools;
+    uses interface Measure;
+    
+    /* Dissemination krams */
+    uses interface StdControl as DisControl;
+    
+    uses interface DisseminationUpdate<node_msg_t> as DisUpdate;
+    uses interface DisseminationValue<node_msg_t> as DisMsg;
+
+    /* Collection krams */
+    uses interface StdControl as RoutingControl;
+    uses interface Send as ColSend;
+    uses interface Receive as ColReceive;
+
     
 }
 
 implementation
 {
+    uint8_t myID;
+    uint8_t partnerID;
+	uint8_t led;
     bool busy = FALSE;
+    message_t pktToBeSend;
     message_t pkt;
+    node_msg_t* ourPayload;
+    error_t result;
+        
+    struct measure_options opts = {
+        .partner = 0,
+        .interval = 500,
+        .count = 0,
+    };
 
     event void Boot.booted()
     {
-        call Leds.led0On();
-        call Leds.led1On();
+        /* target ID wird doch ueber die Node ID gemacht??
+        * also kann myAddr kram weg!?!?
+        * Nein, Toni meint, dass TOS_NODE_ID und AMPACKET.address()
+        * ist das gleiche.
+		//am_addr_t myAddr;
+		//myAddr = call AMPacket.address();
+        */
+
+        myID = call AMPacket.address();
+        
         call AMControl.start();
-        call Timer0.startPeriodic(500);
+
+        /*
+        //Das hab ich erstmal ins startDone event gepackt,
+        //damit man sicher sein kann, dass AMControl gestartet hat
+        if(!busy){
+            ourPayload= (node_msg_t*) call Packet.getPayload(&pktToBeSend, sizeof(node_msg_t));
+            ourPayload->cmd=CMD_LEDON;
+            ourPayload->data[0]=1;
+            ourPayload->data[1]=1;
+            result = call AMSend.send(AM_BROADCAST_ADDR, &pktToBeSend, sizeof(node_msg_t));
+            if(result == SUCCESS)
+                call Leds.led0On();
+            else
+                call Leds.led2On();
+        }
+        */
+        //if(call AMSend.send(AM_BROADCAST_ADDR, ,sizeof(node_msg_t))== SUCCESS)
+            //call Leds.led1On();
+            
+        // call Timer0.startPeriodic(500);
+        //call Leds.led1On();
     } 
+    event void Measure.setupDone(error_t error) {
+        call Measure.start();
+    }
+
+    event void NodeTools.onSerialCommand(node_msg_t* cmd) {
+        struct measure_options serialOpts = {
+            .partner = cmd->data[0],
+            .interval = 500,
+            .count = 0,
+        };
+        call Measure.setup(serialOpts);
+    }
+    event void Measure.received(uint8_t rssi, uint32_t time) {
+        //call NodeTools.sendResponse(NULL);
+    }
+    event void Measure.stopped(void) {
+        //call NodeTools.sendResponse(NULL);
+    }
 
     event void AMControl.startDone(error_t err)
     {
@@ -43,6 +121,17 @@ implementation
         {
             call Leds.led0Off();
             call Timer0.startPeriodic(TIMER_PERIOD_MILLI);
+            if(!busy){
+                ourPayload= (node_msg_t*) call Packet.getPayload(&pktToBeSend, sizeof(node_msg_t));
+                ourPayload->cmd=CMD_LEDON;
+                ourPayload->data[0]=1;
+                ourPayload->data[1]=1;
+                result = call AMSend.send(AM_BROADCAST_ADDR, &pktToBeSend, sizeof(node_msg_t));
+                if(result == SUCCESS)
+                    call Leds.led0On();
+                else
+                    call Leds.led2On();
+            }
         }
         else
         {
@@ -52,21 +141,21 @@ implementation
     event void AMControl.stopDone(error_t err)
     {
     }
-
+    // kann auch weg, wenns laeuft
     event void Timer0.fired()
     {
-
+    /* 
         if (!busy)
         {
             ProjectRssiMsg *msg = call Packet.getPayload(&pkt, sizeof (ProjectRssiMsg));
-            pkt->nodeid = 12; // msg nach pkt 
+            msg->nodeid = 12; // msg nach pkt 
             if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(ProjectRssiMsg)) == SUCCESS)
             {
                 printf("Sende Packet\n");
                 printfflush();
                 busy = TRUE;
             }
-        }
+        }*/
     }
 
     event void AMSend.sendDone(message_t *msg, error_t error)
@@ -74,15 +163,97 @@ implementation
         if (&pkt == msg)
         {
             busy = FALSE;
+            /* Debug kram, kann weg wenn ausprobiert */
+            ourPayload= (node_msg_t*) call Packet.getPayload(msg, sizeof(node_msg_t));
+            if(ourPayload->cmd==CMD_LEDON)
+                call Leds.led1On();
         }
     }
 
+    event void DisMsg.changed(){
+       const node_msg_t *newMsg = call DisMsg.get();
+        /* Hier kommt jetzt der update kram rein 
+        * Nicht in AMSend/Receive und so weiter...
+        *
+        * Wenn Nachricht empfangen wird:
+        * 1. Pruefen obs ne node_msg_t ist, mittels len
+        * 2. Hole Payload also node_msg_t 
+        * 3. Checke ob fuer mich
+        * 4. Wenn nein: Sende weiter! So einfach gehts nicht...
+        * 5. Wenn ja: Fuehre Cmd aus
+        * 6. Profit :)
+        */
+
+        
+
+        /* "native" Kommandos implementieren, benutzerdefinierte weiterreichen */
+        switch (newMsg->cmd) {
+            case CMD_LEDON:
+                if (newMsg->data[0] == myID) {
+                    led = newMsg->data[1];
+                    call NodeTools.setLed(led, TRUE);
+                }
+                break;
+
+            case CMD_LEDOFF:
+                if (newMsg->data[0] == myID) {
+                    led = newMsg->data[1];
+                    call NodeTools.setLed(led, FALSE);
+                }
+                break;
+
+            case CMD_LEDTOGGLE:
+                if (newMsg->data[0] == myID) {
+                    led = newMsg->data[1];
+                    if (call Leds.get() && led) {
+                        call NodeTools.setLed(led, FALSE);
+                    } else {
+                        call NodeTools.setLed(led, TRUE);
+                    }
+                }
+                break;
+
+            case CMD_LEDBLINK:
+                if (newMsg->data[0] == myID) {
+                    led = newMsg->data[1];
+                    call NodeTools.flashLed(led, newMsg->data[2]);
+                }
+                break;
+            case CMD_NEWMEASURE:
+                if ( newMsg->data[0] == myID ) {
+                    opts.partner = newMsg->data[1];
+                }
+                if ( newMsg->data[1] == myID ){
+                    opts.partner = newMsg->data[0];
+                }
+
+                opts.interval = 500;
+                opts.count = 0;
+                
+                call Measure.setup(opts);
+                break;
+
+            case CMD_USERCMD:
+                //signal NodeTools.onSerialCommand(newMsg);
+                break;
+                    
+                
+
+        }
+    }
+    
     event message_t *Receive.receive(message_t *msg, void *payload, uint8_t len)
     {
-        int8_t r = call CC2420Packet.getRssi(msg);
 
-        printf("bla %d\n",r);
-        printfflush();
+        if ( len != sizeof(node_msg_t) ) {
+			return msg;
+		}
+        
+        ourPayload= (node_msg_t*) call Packet.getPayload(msg, sizeof(node_msg_t));
+        /* Hier sollen nur Sachen gemacht werden, um Daten zum Computer
+        * zu uebertragen!
+        * cmds werden ueber das Dissemination interface verteilt!
+        */
 
         return msg;
     }

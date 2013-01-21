@@ -28,5 +28,33 @@ implementation
     ProjectRssiC.AMSend -> AMSenderC;
     ProjectRssiC.AMControl -> ActiveMessageC;
 
+    ProjectRssiC.Receive -> AMReceiverC;
+    
+    components MeasureC;
+    ProjectRssiC.Measure -> MeasureC;
+    
+    components NodeToolsC;
+    ProjectRssiC.NodeTools -> NodeToolsC;
+
+    components DisseminationC;
+    ProjectRssiC.DisControl -> DisseminationC;
+
+    /* DisseminatorC(hier kommt der datentyp rein, und hier ein 
+    * beliebiger key) 
+    * Haben ja nur ein node_msg_t ding, deshalb key egal
+    */
+    components new DisseminatorC(node_msg_t,0x1234) as DisMsg;
+    ProjectRssiC.DisMsg -> DisMsg;
+    ProjectRssiC.DisUpdate -> DisMsg;
+    
+    /* Collection kram
+    *
+    */
+    components CollectionC as Collector;
+    components new CollectionSenderC(0xee);
+    ProjectRssiC.RoutingControl as Collector;
+    ProjectRssiC.ColSend -> CollectionSenderC;
+    ProjectRssiC.RootControl -> Collector;
+    ProjectRssiC.ColReceive -> Collector.Receive[0xee];
 }
 
