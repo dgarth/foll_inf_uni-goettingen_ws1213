@@ -18,6 +18,7 @@ implementation {
 	uint8_t myID; // eigene ID, festgelegt in booted()
 	uint8_t partnerID; // Messpartner, festgelegt bei CMD_NEWMEASURE
 	uint16_t measureSet; // Messreihe, dito
+	uint32_t startTime;
 
     event void Boot.booted(void) {
         call NodeTools.serialInit();
@@ -28,6 +29,7 @@ implementation {
 	// Command event von Andis LCD (commt noch)
 
     event void Measure.setupDone(error_t error) {
+		call NodeTools.debugPrint("setup done");
         call Measure.start();
     }
 
@@ -39,26 +41,55 @@ implementation {
 		switch (cmd->cmd) {
 			case CMD_NEWMEASURE:
 				if (myID == cmd->data[0]) {
-
-					// data[1] ist der Partner, data[0] ist die eigene ID
 					partnerID = cmd->data[1];
+					//measureSet = makeWORD(data, 2);
+					//startTime = makeDWORD(data, 4);
 					opts.partner = partnerID;
 					opts.interval = 500;
 					opts.count = 0;
-        			call Measure.setup(opts);
+					call Measure.setup(opts);
 				} else {
+					call NodeTools.debugPrint("newmeasure dissemination");
 					// Nachricht ist nicht für mich selbst - per dissemination weiterleiten
 				}
+
+				call NodeTools.serialSendOK();
 				break;
 
 			case CMD_STARTMS:
-			case CMD_STOPMS:
-			case CMD_CLEARMS:
-			case CMD_REPORT:
-				// nicht relevant - es kommen keine Reports von der Konsole.
+				if (myID == cmd->data[0] && partnerID == cmd->data[1]) {
+					// start measure
+				} else {
+					call NodeTools.debugPrint("startms dissemination");
+				}
+
+				call NodeTools.serialSendOK();
 				break;
 
-			case CMD_USERCMD:
+			case CMD_STOPMS:
+				if (myID == cmd->data[0] && partnerID == cmd->data[1]) {
+					// stop measure
+				} else {
+					call NodeTools.debugPrint("stopms dissemination");
+				}
+
+				call NodeTools.serialSendOK();
+				break;
+
+			case CMD_CLEARMS:
+				if (myID == cmd->data[0] && partnerID == cmd->data[1]) {
+					// clear measure
+				} else {
+					call NodeTools.debugPrint("clearms dissemination");
+				}
+
+				call NodeTools.serialSendOK();
+				break;
+
+			default:
+				call NodeTools.debugPrint("WARN: Undefined command.");
+				call NodeTools.serialSendOK();
+				break;
 		}
     }
 
@@ -75,6 +106,7 @@ implementation {
 		m.data[2] = measureSet;
 
 		// Timestamp: data[3...6]
+		time += startTime;
 		for (i = 0; i < 4; i++) {
 			m.data[6-i] = time >> (i * 8);
 		}
@@ -82,11 +114,12 @@ implementation {
 		m.data[7] = rssi;
 		m.data[8] = partnerID;
 		m.length = 9;
+		m.moreData = 0;
         
-		call NodeTools.serialSendMsg(&m);
+		call NodeTools.enqueueMsg(&m);
     }
     
     event void Measure.stopped(void) {
-        call NodeTools.serialSendMsg(NULL);
+		call NodeTools.debugPrint("Measure stopped.");
     }
 }
