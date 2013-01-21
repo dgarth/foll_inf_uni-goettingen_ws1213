@@ -77,14 +77,12 @@ implementation {
 	//Wenn wir alle Werte haben, in die fertige node_msg_t schreiben
 	void finalize(void) {
 		cmd_msg->cmd = cmdType;
-		cmd_msg->data[0]=id1;
-		cmd_msg->data[1]=id2;
-		pack(cmd_msg->data+2, "H", mid);
-		cmd_msg->data[8]=2;
-		pack(cmd_msg->data+9, "H", quantity);
-		cmd_msg->data[12]=1;
-		cmd_msg->data[16]=2;
-		cmd_msg->data[14]=TOS_NODE_ID;
+		cmd_msg->length = pack(cmd_msg->data, "BBHH",
+				id1,
+				id2,
+				mid,
+				quantity
+				);
 	}
 	
 	/*Einen Befehl vom User erfragen und entsprechende node_msg_t generieren*/
@@ -127,8 +125,8 @@ implementation {
 	/*Einen Messreport aus einer node_msg_t über den LCD anzeigen */
 	command error_t LcdMenu.showReport(const node_msg_t *report)
 	{
-		uint16_t mr = 0;
-		uint32_t t = 0;
+		uint8_t rssi;
+		uint16_t series_nr, packet_nr;
 		
 		r = TRUE;
 		rep_msg = report;
@@ -139,12 +137,17 @@ implementation {
 		memset(linebuf1, ' ', 16);
 		memset(linebuf2, ' ', 16);
 		
-		unpack(rep_msg->data+1, "H", &mr);
-		unpack(rep_msg->data+3, "I", &t);
+		unpack(rep_msg->data, "BBHHB",
+				&id1,
+				&id2,
+				&series_nr,
+				&packet_nr,
+				&rssi
+			  );
 		
-		snprintf(linebuf1, 16, "N1:%u N2:%u M:%u", rep_msg->data[0], rep_msg->data[8], mr);
-		snprintf(linebuf2, 16, "R:%u T:%lu", rep_msg->data[7], time);
-
+		snprintf(linebuf1, 16, "N1:%u N2:%u M:%u", id1, id2, series_nr);
+		snprintf(linebuf2, 16, "P:%u R:%u", packet_nr, rssi);
+		
 		//LCD anschalten
 		call LcdControl.enable();
 		
