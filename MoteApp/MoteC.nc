@@ -27,6 +27,8 @@ implementation {
     
 	// Command event von Andis LCD (kommt noch)
 
+	// Dissemination receive event handler
+
     event void Measure.setupDone(error_t error) {
     }
 
