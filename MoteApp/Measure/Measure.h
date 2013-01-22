@@ -11,11 +11,9 @@ enum
 
 struct measure_options
 {
-    uint8_t
-        partner;
+    uint8_t partner;
 
-    uint16_t
-        count;
+    uint16_t count;
 };
 
 #endif

@@ -8,7 +8,7 @@ module MeasureP
 
     uses
     {
-        interface Timer<TMilli>;
+        interface Timer < TMilli >;
 
         interface SplitControl as RadioControl;
         interface AMSend as Send;
@@ -33,10 +33,7 @@ implementation
     /* EXTERNAL VARIABLES */
     /**********************/
 
-    bool
-        radio_started=FALSE,
-        radio_busy=FALSE,
-        running=FALSE;
+    bool radio_started = FALSE, radio_busy = FALSE, running = FALSE;
 
     struct measure_options config;
 
@@ -78,19 +75,19 @@ implementation
         /* try to start up the radio */
         switch (call RadioControl.start()) {
 
-            /* radio already started -> good! */
             case EALREADY:
+                /* radio already started -> good! */
                 radio_started = TRUE;
                 signal Measure.setupDone(SUCCESS);
                 break;
 
-            /* startDone will be signalled -> do nothing for now */
             case SUCCESS:
+                /* startDone will be signalled -> do nothing for now */
                 break;
 
-            /* can't start radio -> bad */
             case EBUSY:
             case FAIL:
+                /* can't start radio -> bad */
                 signal Measure.setupDone(FAIL);
                 break;
         }
@@ -155,14 +152,17 @@ implementation
     /* Receive */
     /*---------*/
 
-    event message_t *Receive.receive(message_t *msg, void *payload, uint8_t len)
+    event message_t *Receive.receive(message_t *msg, void *payload,
+                                     uint8_t len)
     {
         uint8_t rssi;
 
         /* get sender node ID */
         am_addr_t source = call AMPacket.source(msg);
 
-        /* are we measuring and is the message OK (a dummy packet from our partner)? */
+        /* are we measuring and is the message OK
+         * (a dummy packet from our partner)?
+         */
         if (running && len == 0 && source == config.partner) {
             rssi = call RssiPacket.getRssi(msg) - RSSI_OFFSET;
             signal Measure.received(rssi);
