@@ -27,8 +27,9 @@ implementation
         call NodeTools.serialInit();
 
         /* run infinite test series between nodes 1 and 2 */
-        m_opts.partner = TOS_NODE_ID ^ 0x3,
-            m_opts.count = 0, call Measure.setup(m_opts);
+        m_opts.partner = TOS_NODE_ID ^ 0x3;
+        m_opts.count = 0;
+        call Measure.setup(m_opts);
     }
 
     event void Measure.setupDone(error_t error)
