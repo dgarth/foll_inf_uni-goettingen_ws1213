@@ -21,17 +21,17 @@ module MeasureP
 
 implementation
 {
-    /****************************/
-    /* TASK/FUNCTION PROTOTYPES */
-    /****************************/
+    /****************************
+     * TASK/FUNCTION PROTOTYPES *
+     ****************************/
 
     /* stop currently running test series (or do nothing) */
     task void stop(void);
 
 
-    /**********************/
-    /* EXTERNAL VARIABLES */
-    /**********************/
+    /**********************
+     * EXTERNAL VARIABLES *
+     **********************/
 
     bool radio_started = FALSE, radio_busy = FALSE, running = FALSE;
 
@@ -44,9 +44,9 @@ implementation
     message_t pkt;
 
 
-    /*********************************/
-    /* TASK/FUNCTION IMPLEMENTATIONS */
-    /*********************************/
+    /*********************************
+     * TASK/FUNCTION IMPLEMENTATIONS *
+     *********************************/
 
     task void stop(void)
     {
@@ -56,13 +56,13 @@ implementation
     }
 
 
-    /***********************/
-    /* PROVIDED INTERFACES */
-    /***********************/
+    /***********************
+     * PROVIDED INTERFACES *
+     ***********************/
 
-    /*---------*/
-    /* Measure */
-    /*---------*/
+    /*---------*
+     * Measure *
+     *---------*/
 
     command void Measure.setup(struct measure_options opt)
     {
@@ -110,13 +110,13 @@ implementation
     }
 
 
-    /*******************/
-    /* USED INTERFACES */
-    /*******************/
+    /*******************
+     * USED INTERFACES *
+     *******************/
 
-    /*-------*/
-    /* Timer */
-    /*-------*/
+    /*-------*
+     * Timer *
+     *-------*/
 
     event void Timer.fired(void)
     {
@@ -136,9 +136,9 @@ implementation
     }
 
 
-    /*------*/
-    /* Send */
-    /*------*/
+    /*------*
+     * Send *
+     *------*/
 
     event void Send.sendDone(message_t *msg, error_t error)
     {
@@ -148,9 +148,9 @@ implementation
     }
 
 
-    /*---------*/
-    /* Receive */
-    /*---------*/
+    /*---------*
+     * Receive *
+     *---------*/
 
     event message_t *Receive.receive(message_t *msg, void *payload,
                                      uint8_t len)
@@ -171,9 +171,9 @@ implementation
     }
 
 
-    /*--------------*/
-    /* RadioControl */
-    /*--------------*/
+    /*--------------*
+     * RadioControl *
+     *--------------*/
 
     event void RadioControl.startDone(error_t err)
     {
