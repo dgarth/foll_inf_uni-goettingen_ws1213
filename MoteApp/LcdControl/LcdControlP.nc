@@ -1,3 +1,5 @@
+// vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
+
 #include "LcdControl.h"
 #include <string.h>
 

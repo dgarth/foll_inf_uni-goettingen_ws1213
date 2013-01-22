@@ -1,3 +1,5 @@
+// vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
+
 /* allnodes.h - definiert das, was für alle Nodes gleich bleibt. */
 
 #ifndef ALLNODES_H
