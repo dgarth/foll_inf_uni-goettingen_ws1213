@@ -1,4 +1,4 @@
-module AmpelC {
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
   uses interface Timer<TMilli> as MyTimer;
   uses interface Leds as Horst;
   uses interface Boot;

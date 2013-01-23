@@ -1,5 +1,4 @@
-/** Und um einen kommentar zu dokumentieren, macht man einen kommentar oben drueber? :D
-**/
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 #include "Timer.h"
 #include "CC2420.h"
 
@@ -21,9 +20,10 @@ module ProjectRssiC @safe()
 
     uses interface Packet;
     uses interface AMPacket;
-    uses interface AMSend;
     uses interface SplitControl as AMControl;
-    uses interface Receive;
+    // Zum Testen von Collection erstmal rausgenommen
+    //uses interface Receive;
+    //uses interface AMSend;
 
     uses interface NodeTools;
     uses interface Measure;
@@ -64,7 +64,7 @@ implementation
         /* target ID wird doch ueber die Node ID gemacht??
         * also kann myAddr kram weg!?!?
         * Nein, Toni meint, dass TOS_NODE_ID und AMPACKET.address()
-        * ist das gleiche.
+        * das gleiche sind.
 		//am_addr_t myAddr;
 		//myAddr = call AMPacket.address();
         */
@@ -75,7 +75,7 @@ implementation
 
         /*
         //Das hab ich erstmal ins startDone event gepackt,
-        //damit man sicher sein kann, dass AMControl gestartet hat
+        //damit man sicher sein kann, dass AMControl gestartet ist
         if(!busy){
             ourPayload= (node_msg_t*) call Packet.getPayload(&pktToBeSend, sizeof(node_msg_t));
             ourPayload->cmd=CMD_LEDON;
@@ -116,18 +116,12 @@ implementation
     {
         if (err == SUCCESS)
         {
-            call Leds.led0Off();
-            call Timer0.startPeriodic(TIMER_PERIOD_MILLI);
-            if(!busy){
-                ourPayload= (node_msg_t*) call Packet.getPayload(&pktToBeSend, sizeof(node_msg_t));
-                ourPayload->cmd=CMD_LEDON;
-                ourPayload->data[0]=1;
-                ourPayload->data[1]=1;
-                result = call AMSend.send(AM_BROADCAST_ADDR, &pktToBeSend, sizeof(node_msg_t));
-                if(result == SUCCESS)
-                    call Leds.led0On();
-                else
-                    call Leds.led2On();
+            call RoutingControl.start();
+            if ( myID == 10 ) {
+               call RootControl.setRoot();
+            }
+            else {
+               call Timer0.startPeriodic(500); 
             }
         }
         else
@@ -141,12 +135,23 @@ implementation
     // kann auch weg, wenns laeuft
     event void Timer0.fired()
     {
+        if(!busy){
+            ourPayload= (node_msg_t*) call Packet.getPayload(&pktToBeSend, sizeof(node_msg_t));
+            ourPayload->cmd=CMD_LEDON;
+            ourPayload->data[0]=1;
+            ourPayload->data[1]=1;
+            result = call ColSend.send(&pktToBeSend, sizeof(node_msg_t));
+            if(result == SUCCESS)
+                call Leds.led0On();
+            else
+                call Leds.led2On();
+        }
     /* 
         if (!busy)
         {
-            ProjectRssiMsg *msg = call Packet.getPayload(&pkt, sizeof (ProjectRssiMsg));
+            ProjectRssiMsg *msg = call Packet.getPayload(&pktToBeSend, sizeof (ProjectRssiMsg));
             msg->nodeid = 12; // msg nach pkt 
-            if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(ProjectRssiMsg)) == SUCCESS)
+            if (call AMSend.send(AM_BROADCAST_ADDR, &pktToBeSend, sizeof(ProjectRssiMsg)) == SUCCESS)
             {
                 printf("Sende Packet\n");
                 printfflush();
@@ -156,12 +161,7 @@ implementation
     }
     
     event void ColSend.sendDone(message_t *msg, error_t error) {
-
-    }
-
-    event void AMSend.sendDone(message_t *msg, error_t error)
-    {
-        if (&pkt == msg)
+        if (&pktToBeSend == msg)
         {
             busy = FALSE;
             /* Debug kram, kann weg wenn ausprobiert */
@@ -169,6 +169,7 @@ implementation
             if(ourPayload->cmd==CMD_LEDON)
                 call Leds.led1On();
         }
+
     }
 
     event void DisMsg.changed(){
@@ -236,19 +237,20 @@ implementation
 
         }
     }
-    event message_t *ColReceive.receive(message_t *msg, void *payload, uint8_t len){
-        return msg;
-    }
     
     
-    event message_t *Receive.receive(message_t *msg, void *payload, uint8_t len)
+    event message_t *ColReceive.receive(message_t *msg, void *payload, uint8_t len)
     {
 
         if ( len != sizeof(node_msg_t) ) {
 			return msg;
 		}
         
+        /* Collection Test */
         ourPayload= (node_msg_t*) call Packet.getPayload(msg, sizeof(node_msg_t));
+        if ( ourPayload->cmd == CMD_LEDON ){
+            call NodeTools.setLed(ourPayload->data[1], TRUE);
+        }
         /* Hier sollen nur Sachen gemacht werden, um Daten zum Computer
         * zu uebertragen!
         * cmds werden ueber das Dissemination interface verteilt!

@@ -1,4 +1,4 @@
-// $Id: TestSerialAppC.nc,v 1.6 2010-06-29 22:07:25 scipio Exp $
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
 /*									tab:4
  * Copyright (c) 2000-2005 The Regents of the University  of California.  

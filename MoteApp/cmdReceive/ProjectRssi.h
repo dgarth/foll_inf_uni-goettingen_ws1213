@@ -1,3 +1,4 @@
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 #ifndef PROJECT_RSSI_H
 #define PROJECT_RSSI_H
 

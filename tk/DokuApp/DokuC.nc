@@ -1,4 +1,4 @@
-/* DokuC: Konfiguration und Implementierung der App-eigenen Komponente DokuC. Diese wird in DokuAppC an die benutzten Interfaces gebunden. */
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
 /* Konfigurationsteil - Deklaration aller verwendeten Interfaces. Das Attribut @safe() kann den Speicher java-like überwachen (aber kein GC). Mehr dazu im TinyOS Wiki. */
 module DokuC /*@safe()*/ {

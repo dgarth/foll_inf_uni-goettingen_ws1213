@@ -1,4 +1,4 @@
-/* allnodes.h - definiert das, was für alle Nodes gleich bleibt. */
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
 #ifndef ALLNODES_H
 #define ALLNODES_H

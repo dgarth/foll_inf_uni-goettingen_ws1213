@@ -1,4 +1,4 @@
-#include "ProjectRssi.h"
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 #include "/opt/tinyos-2.1.2/tos/lib/printf/printf.h"
 #define NEW_PRINTF_SEMANTICS
 configuration ProjectRssiAppC
@@ -13,8 +13,8 @@ implementation
     components CC2420PacketC;
 
     components ActiveMessageC;
-    components new AMSenderC(6);
-    components new AMReceiverC(6);
+    //components new AMSenderC(6);
+    //components new AMReceiverC(6);
 
     ProjectRssiC -> MainC.Boot;
 
@@ -23,12 +23,12 @@ implementation
     ProjectRssiC.CC2420Packet->CC2420PacketC;
     ProjectRssiC.Leds -> LedsC;
 
-    ProjectRssiC.Packet -> AMSenderC;
-    ProjectRssiC.AMPacket -> AMSenderC;
-    ProjectRssiC.AMSend -> AMSenderC;
+    //ProjectRssiC.Packet -> AMSenderC;
+    //ProjectRssiC.AMPacket -> AMSenderC;
+    //ProjectRssiC.AMSend -> AMSenderC;
     ProjectRssiC.AMControl -> ActiveMessageC;
 
-    ProjectRssiC.Receive -> AMReceiverC;
+    //ProjectRssiC.Receive -> AMReceiverC;
     
     components MeasureC;
     ProjectRssiC.Measure -> MeasureC;

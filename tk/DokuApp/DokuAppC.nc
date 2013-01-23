@@ -1,4 +1,4 @@
-/* DokuAppC: TopLevel-Konfiguration (eine Art "Header") für die ganze App (deswegen auch der Name "...AppC". Im Makefile wird nur diese TopLevel-Komponente angegeben - alles andere findet der Compiler automatisch (durch die Wirings). */
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
 configuration DokuAppC {
 /* Konfigurationsteil - Hier werden alle Interfaces deklariert, die in der aktuellen Datei verwendet oder von ihr implementiert werden. In diesem Modul gibt es nur Wirings und keinen Code, also ist diese Sektion leer. */

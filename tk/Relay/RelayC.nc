@@ -1,4 +1,4 @@
-/* RelayC: Implementiert die Logik der Relay-Mote. */
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
 #include <printf.h>
 #include "allnodes.h"

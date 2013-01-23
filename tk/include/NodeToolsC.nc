@@ -1,4 +1,4 @@
-/* NodeToolsC.nc - Konfiguration und Wirings für das Interface NodeTools */
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
 configuration NodeToolsC {
 	provides interface NodeTools;

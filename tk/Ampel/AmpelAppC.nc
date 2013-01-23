@@ -1,4 +1,4 @@
-configuration AmpelAppC {
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 }
 implementation {
   components MainC, AmpelC, LedsC;
