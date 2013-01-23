@@ -48,6 +48,7 @@ implementation
     node_msg_t* ourPayload;
     node_msg_t disMsg;
     error_t result;
+    node_msg_t* sendingMsg;
         
     struct measure_options opts = {
         .partner = 0,
@@ -55,30 +56,18 @@ implementation
     };
 
     event void Boot.booted()
-    {
-        /* target ID wird doch ueber die Node ID gemacht??
-        * also kann myAddr kram weg!?!?
-        * Nein, Toni meint, dass TOS_NODE_ID und AMPACKET.address()
-        * das gleiche sind.
-		//am_addr_t myAddr;
-		//myAddr = call AMPacket.address();
-        */
-
-        
+    {      
         call AMControl.start();
 
     } 
+    
     event void Measure.setupDone(error_t error) {
         call Measure.start();
     }
 
     event void NodeTools.onSerialCommand(node_msg_t* cmd) {
-        struct measure_options serialOpts = {
-            .partner = cmd->data[0],
-            .count = 0,
-        };
-        call Measure.setup(serialOpts);
     }
+    
     event void Measure.received(uint8_t rssi) {
         //call NodeTools.sendResponse(NULL);
     }
@@ -168,20 +157,22 @@ implementation
 
         /* "native" Kommandos implementieren, benutzerdefinierte weiterreichen */
         switch (newMsg->cmd) {
+        	case S_OK:
+        		break;
+        	case CMD_ECHO:
+        		break;
             case CMD_LEDON:
                 if (newMsg->data[0] == myID) {
                     led = newMsg->data[1];
                     call NodeTools.setLed(led, TRUE);
                 }
                 break;
-
             case CMD_LEDOFF:
                 if (newMsg->data[0] == myID) {
                     led = newMsg->data[1];
                     call NodeTools.setLed(led, FALSE);
                 }
                 break;
-
             case CMD_LEDTOGGLE:
                 if (newMsg->data[0] == myID) {
                     led = newMsg->data[1];
@@ -192,7 +183,6 @@ implementation
                     }
                 }
                 break;
-
             case CMD_LEDBLINK:
                 if (newMsg->data[0] == myID) {
                     led = newMsg->data[1];
@@ -211,6 +201,32 @@ implementation
                 
                 call Measure.setup(opts);
                 break;
+            case CMD_STARTMS:
+            	if( call Measure.start() == SUCCESS);
+            	break;
+            case CMD_STOPMS:
+            	call Measure.stop();
+            	break;
+            case CMD_CLEARMS:
+            	opts.partner = -1;
+            	opts.count = -1;
+            	call Measure.setup(opts);
+            	break;
+            case CMD_REPORT:
+            	if (newMsg->data[0] != myID )
+            		return;
+            	sendingMsg = (node_msg_t*) call ColSend.getPayload(&pktToBeSend, sizeof(node_msg_t));;
+            	sendingMsg->cmd=CMD_REPORT;
+            	sendingMsg->data[0]=myID;
+            	sendingMsg->data[1]=opts.partner;
+            	// Messreihe? sendingMsg->data[2]
+            	// MEssreihe? sendingMsg->data[3]
+            	sendingMsg->data[4]=opts.count;
+            	sendingMsg->data[6]=-1;
+            	result = call ColSend.send(&pktToBeSend, sizeof(node_msg_t));
+            	break;
+            case DEBUG_OUTPUT:
+            	break;
 
 
         }
