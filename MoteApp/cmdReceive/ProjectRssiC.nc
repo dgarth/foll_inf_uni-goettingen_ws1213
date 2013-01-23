@@ -46,6 +46,7 @@ implementation
     bool busy = FALSE;
     message_t pktToBeSend;
     node_msg_t* ourPayload;
+    node_msg_t disMsg;
     error_t result;
         
     struct measure_options opts = {
@@ -90,12 +91,14 @@ implementation
         if (err == SUCCESS)
         {
             myID = call AMPacket.address();
-            call RoutingControl.start();
+            call DisControl.start();
+            //call RoutingControl.start();
             if ( myID == 10 ) {
-                call RootControl.setRoot();
+               call Timer0.startPeriodic(500); 
+                //call RootControl.setRoot();
             }
             else {
-               call Timer0.startPeriodic(500); 
+               //call Timer0.startPeriodic(500); 
             }
         }
         else
@@ -109,7 +112,13 @@ implementation
     // kann auch weg, wenns laeuft
     event void Timer0.fired()
     {
-        if(!busy){
+        disMsg.cmd=CMD_LEDTOGGLE;
+        if ( TOS_NODE_ID  == 10 ) {
+            disMsg.data[0]=1;
+            disMsg.data[1]=LED_GREEN;
+            call DisUpdate.change(&disMsg);
+        }
+        /*if(!busy){
             ourPayload= (node_msg_t*) call ColSend.getPayload(&pktToBeSend, sizeof(node_msg_t));
             ourPayload->cmd=CMD_LEDON;
             ourPayload->data[0]=1;
@@ -122,7 +131,7 @@ implementation
             else {
                 call Leds.led2Toggle();
             }
-        }
+        }*/
     }
     
     event void ColSend.sendDone(message_t *msg, error_t error) {
@@ -139,7 +148,10 @@ implementation
     }
 
     event void DisMsg.changed(){
-       const node_msg_t *newMsg = call DisMsg.get();
+
+
+
+       const node_msg_t* newMsg = (node_msg_t*) call DisMsg.get();
         /* Hier kommt jetzt der update kram rein 
         * Nicht in AMSend/Receive und so weiter...
         *
