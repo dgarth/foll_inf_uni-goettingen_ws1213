@@ -1,3 +1,5 @@
+// vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
+
 /* allnodes.h - definiert das, was für alle Nodes gleich bleibt. */
 
 #ifndef ALLNODES_H
@@ -48,8 +50,7 @@ enum commands {
        data[1] = ID2 (receiving node), uint8
        data[2]...data[3] = Messreihe, uint16
        data[4]...data[5] = Anzahl Messpakete, uint16
-       data[6]...data[7] = Intervall zwischen Messpaketen (ms), uint16
-       -> format "BBHHH"
+       -> format "BBHH"
      */
 
     CMD_STARTMS,

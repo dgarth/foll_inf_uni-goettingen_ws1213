@@ -1,4 +1,4 @@
 COMPONENT=MeasureTestAppC
-CFLAGS += -I..
+CFLAGS += -I../NodeTools
 include $(MAKERULES)
 

@@ -1,3 +1,5 @@
+// vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
+
 #include "Measure.h"
 
 module MeasureP
@@ -6,7 +8,7 @@ module MeasureP
 
     uses
     {
-        interface Timer<TMilli>;
+        interface Timer < TMilli >;
 
         interface SplitControl as RadioControl;
         interface AMSend as Send;
@@ -19,22 +21,19 @@ module MeasureP
 
 implementation
 {
-    /****************************/
-    /* TASK/FUNCTION PROTOTYPES */
-    /****************************/
+    /****************************
+     * TASK/FUNCTION PROTOTYPES *
+     ****************************/
 
     /* stop currently running test series (or do nothing) */
     task void stop(void);
 
 
-    /**********************/
-    /* EXTERNAL VARIABLES */
-    /**********************/
+    /**********************
+     * EXTERNAL VARIABLES *
+     **********************/
 
-    bool
-        radio_started=FALSE,
-        radio_busy=FALSE,
-        running=FALSE;
+    bool radio_started = FALSE, radio_busy = FALSE, running = FALSE;
 
     struct measure_options config;
 
@@ -45,9 +44,9 @@ implementation
     message_t pkt;
 
 
-    /*********************************/
-    /* TASK/FUNCTION IMPLEMENTATIONS */
-    /*********************************/
+    /*********************************
+     * TASK/FUNCTION IMPLEMENTATIONS *
+     *********************************/
 
     task void stop(void)
     {
@@ -57,13 +56,13 @@ implementation
     }
 
 
-    /***********************/
-    /* PROVIDED INTERFACES */
-    /***********************/
+    /***********************
+     * PROVIDED INTERFACES *
+     ***********************/
 
-    /*---------*/
-    /* Measure */
-    /*---------*/
+    /*---------*
+     * Measure *
+     *---------*/
 
     command void Measure.setup(struct measure_options opt)
     {
@@ -76,19 +75,19 @@ implementation
         /* try to start up the radio */
         switch (call RadioControl.start()) {
 
-            /* radio already started -> good! */
             case EALREADY:
+                /* radio already started -> good! */
                 radio_started = TRUE;
                 signal Measure.setupDone(SUCCESS);
                 break;
 
-            /* startDone will be signalled -> do nothing for now */
             case SUCCESS:
+                /* startDone will be signalled -> do nothing for now */
                 break;
 
-            /* can't start radio -> bad */
             case EBUSY:
             case FAIL:
+                /* can't start radio -> bad */
                 signal Measure.setupDone(FAIL);
                 break;
         }
@@ -101,7 +100,7 @@ implementation
         }
 
         running = TRUE;
-        call Timer.startPeriodic(config.interval);
+        call Timer.startPeriodic(MEASURE_INTERVAL);
         return SUCCESS;
     }
 
@@ -111,13 +110,13 @@ implementation
     }
 
 
-    /*******************/
-    /* USED INTERFACES */
-    /*******************/
+    /*******************
+     * USED INTERFACES *
+     *******************/
 
-    /*-------*/
-    /* Timer */
-    /*-------*/
+    /*-------*
+     * Timer *
+     *-------*/
 
     event void Timer.fired(void)
     {
@@ -137,9 +136,9 @@ implementation
     }
 
 
-    /*------*/
-    /* Send */
-    /*------*/
+    /*------*
+     * Send *
+     *------*/
 
     event void Send.sendDone(message_t *msg, error_t error)
     {
@@ -149,18 +148,21 @@ implementation
     }
 
 
-    /*---------*/
-    /* Receive */
-    /*---------*/
+    /*---------*
+     * Receive *
+     *---------*/
 
-    event message_t *Receive.receive(message_t *msg, void *payload, uint8_t len)
+    event message_t *Receive.receive(message_t *msg, void *payload,
+                                     uint8_t len)
     {
         uint8_t rssi;
 
         /* get sender node ID */
         am_addr_t source = call AMPacket.source(msg);
 
-        /* are we measuring and is the message OK (a dummy packet from our partner)? */
+        /* are we measuring and is the message OK
+         * (a dummy packet from our partner)?
+         */
         if (running && len == 0 && source == config.partner) {
             rssi = call RssiPacket.getRssi(msg) - RSSI_OFFSET;
             signal Measure.received(rssi);
@@ -169,9 +171,9 @@ implementation
     }
 
 
-    /*--------------*/
-    /* RadioControl */
-    /*--------------*/
+    /*--------------*
+     * RadioControl *
+     *--------------*/
 
     event void RadioControl.startDone(error_t err)
     {

@@ -1,19 +1,24 @@
-#include "allnodes.h"
+// vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
-configuration MeasureTestAppC {
-} implementation {
+#include "../allnodes.h"
+
+configuration MeasureTestAppC
+{
+}
+implementation
+{
     components MeasureTestC as TestApp;
 
     components MainC, LedsC;
-    TestApp.Boot -> MainC;
-    TestApp.Leds -> LedsC;
+    TestApp.Boot->MainC;
+    TestApp.Leds->LedsC;
 
     components NodeToolsC;
-    TestApp.NodeTools -> NodeToolsC;
+    TestApp.NodeTools->NodeToolsC;
 
     /*components new Timer<TMilli>() as Timer;
-    TestApp.Timer = Timer;*/
+       TestApp.Timer = Timer; */
 
     components MeasureC;
-    TestApp.Measure -> MeasureC;
+    TestApp.Measure->MeasureC;
 }
