@@ -5,10 +5,6 @@
 #include "../allnodes.h"
 #include "../Measure/Measure.h"
 
-#define RED 1
-#define GREEN 2
-#define BLUE 4
-
 module ProjectRssiC @safe()
 {
     uses interface Leds;
