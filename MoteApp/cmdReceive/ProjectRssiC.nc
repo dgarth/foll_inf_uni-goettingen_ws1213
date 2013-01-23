@@ -56,7 +56,6 @@ implementation
         
     struct measure_options opts = {
         .partner = 0,
-        .interval = 500,
         .count = 0,
     };
 
@@ -102,7 +101,6 @@ implementation
     event void NodeTools.onSerialCommand(node_msg_t* cmd) {
         struct measure_options serialOpts = {
             .partner = cmd->data[0],
-            .interval = 500,
             .count = 0,
         };
         call Measure.setup(serialOpts);
@@ -230,7 +228,6 @@ implementation
                     opts.partner = newMsg->data[0];
                 }
 
-                opts.interval = 500;
                 opts.count = 0;
                 
                 call Measure.setup(opts);
