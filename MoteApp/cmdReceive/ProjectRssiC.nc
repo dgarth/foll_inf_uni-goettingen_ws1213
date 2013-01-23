@@ -2,7 +2,6 @@
 #include "Timer.h"
 #include "CC2420.h"
 
-#include "ProjectRssi.h"
 #include "../allnodes.h"
 #include "../Measure/Measure.h"
 
