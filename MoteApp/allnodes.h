@@ -83,7 +83,7 @@ enum commands {
        data = (string) */
 };
 
-#define MAX_DATA 25
+#define MAX_DATA 10
 
 typedef nx_struct node_msg {
 	/* Kommando */

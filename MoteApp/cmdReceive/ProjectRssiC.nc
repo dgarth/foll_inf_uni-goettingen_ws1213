@@ -18,7 +18,7 @@ module ProjectRssiC @safe()
     uses interface Timer<TMilli> as Timer0;
     uses interface CC2420Packet;
 
-    uses interface Packet;
+    //uses interface Packet;
     uses interface AMPacket;
     uses interface SplitControl as AMControl;
     // Zum Testen von Collection erstmal rausgenommen
@@ -50,7 +50,6 @@ implementation
 	uint8_t led;
     bool busy = FALSE;
     message_t pktToBeSend;
-    message_t pkt;
     node_msg_t* ourPayload;
     error_t result;
         
@@ -69,30 +68,9 @@ implementation
 		//myAddr = call AMPacket.address();
         */
 
-        myID = call AMPacket.address();
         
         call AMControl.start();
 
-        /*
-        //Das hab ich erstmal ins startDone event gepackt,
-        //damit man sicher sein kann, dass AMControl gestartet ist
-        if(!busy){
-            ourPayload= (node_msg_t*) call Packet.getPayload(&pktToBeSend, sizeof(node_msg_t));
-            ourPayload->cmd=CMD_LEDON;
-            ourPayload->data[0]=1;
-            ourPayload->data[1]=1;
-            result = call AMSend.send(AM_BROADCAST_ADDR, &pktToBeSend, sizeof(node_msg_t));
-            if(result == SUCCESS)
-                call Leds.led0On();
-            else
-                call Leds.led2On();
-        }
-        */
-        //if(call AMSend.send(AM_BROADCAST_ADDR, ,sizeof(node_msg_t))== SUCCESS)
-            //call Leds.led1On();
-            
-        // call Timer0.startPeriodic(500);
-        //call Leds.led1On();
     } 
     event void Measure.setupDone(error_t error) {
         call Measure.start();
@@ -116,9 +94,10 @@ implementation
     {
         if (err == SUCCESS)
         {
+            myID = call AMPacket.address();
             call RoutingControl.start();
             if ( myID == 10 ) {
-               call RootControl.setRoot();
+                call RootControl.setRoot();
             }
             else {
                call Timer0.startPeriodic(500); 
@@ -136,38 +115,30 @@ implementation
     event void Timer0.fired()
     {
         if(!busy){
-            ourPayload= (node_msg_t*) call Packet.getPayload(&pktToBeSend, sizeof(node_msg_t));
+            ourPayload= (node_msg_t*) call ColSend.getPayload(&pktToBeSend, sizeof(node_msg_t));
             ourPayload->cmd=CMD_LEDON;
             ourPayload->data[0]=1;
             ourPayload->data[1]=1;
             result = call ColSend.send(&pktToBeSend, sizeof(node_msg_t));
-            if(result == SUCCESS)
-                call Leds.led0On();
-            else
-                call Leds.led2On();
-        }
-    /* 
-        if (!busy)
-        {
-            ProjectRssiMsg *msg = call Packet.getPayload(&pktToBeSend, sizeof (ProjectRssiMsg));
-            msg->nodeid = 12; // msg nach pkt 
-            if (call AMSend.send(AM_BROADCAST_ADDR, &pktToBeSend, sizeof(ProjectRssiMsg)) == SUCCESS)
-            {
-                printf("Sende Packet\n");
-                printfflush();
-                busy = TRUE;
+            if(result == SUCCESS) {
+                busy==TRUE;
+                call Leds.led0Toggle();
             }
-        }*/
+            else {
+                call Leds.led2Toggle();
+            }
+        }
     }
     
     event void ColSend.sendDone(message_t *msg, error_t error) {
         if (&pktToBeSend == msg)
         {
+
             busy = FALSE;
             /* Debug kram, kann weg wenn ausprobiert */
-            ourPayload= (node_msg_t*) call Packet.getPayload(msg, sizeof(node_msg_t));
+            ourPayload= (node_msg_t*) call ColSend.getPayload(msg, sizeof(node_msg_t));
             if(ourPayload->cmd==CMD_LEDON)
-                call Leds.led1On();
+                call Leds.led1Toggle();
         }
 
     }
@@ -241,14 +212,16 @@ implementation
     
     event message_t *ColReceive.receive(message_t *msg, void *payload, uint8_t len)
     {
-
+        //call Leds.led0Toggle();
         if ( len != sizeof(node_msg_t) ) {
 			return msg;
 		}
         
         /* Collection Test */
-        ourPayload= (node_msg_t*) call Packet.getPayload(msg, sizeof(node_msg_t));
+        ourPayload= (node_msg_t*) call ColSend.getPayload(msg, sizeof(node_msg_t));
         if ( ourPayload->cmd == CMD_LEDON ){
+            call Leds.led2Toggle();
+            
             call NodeTools.setLed(ourPayload->data[1], TRUE);
         }
         /* Hier sollen nur Sachen gemacht werden, um Daten zum Computer

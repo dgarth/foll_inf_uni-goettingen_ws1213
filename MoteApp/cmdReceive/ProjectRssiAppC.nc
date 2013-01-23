@@ -23,8 +23,6 @@ implementation
     ProjectRssiC.CC2420Packet->CC2420PacketC;
     ProjectRssiC.Leds -> LedsC;
 
-    //ProjectRssiC.Packet -> AMSenderC;
-    //ProjectRssiC.AMPacket -> AMSenderC;
     //ProjectRssiC.AMSend -> AMSenderC;
     ProjectRssiC.AMControl -> ActiveMessageC;
 
@@ -52,6 +50,7 @@ implementation
     */
     components CollectionC as Collector;
     components new CollectionSenderC(0xee);
+    ProjectRssiC.AMPacket -> ActiveMessageC;
     ProjectRssiC.RoutingControl -> Collector;
     ProjectRssiC.ColSend -> CollectionSenderC;
     ProjectRssiC.RootControl -> Collector;
