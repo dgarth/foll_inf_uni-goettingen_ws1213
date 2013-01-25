@@ -1,4 +1,4 @@
-/* NodeToolsP.nc - Implementierung des Interfaces NodeTools. */
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
 #include <printf.h>
 

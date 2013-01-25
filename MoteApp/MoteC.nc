@@ -1,4 +1,4 @@
-// vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
 // Das vi-Syntaxhighlighting funktioniert (bei mir) nur mit diesem seltsamen Kommentar-Konstrukt am Anfang.
 

@@ -1,6 +1,4 @@
-// vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
-
-#include "../allnodes.h"
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
 configuration MeasureC
 {
@@ -16,22 +14,22 @@ implementation
 
     /* for starting up the radio */
     components ActiveMessageC;
-    M.RadioControl->ActiveMessageC;
+    M.RadioControl -> ActiveMessageC;
 
     /* to send/receive packets */
     components new AMSenderC(AM_MEASURE);
     components new AMReceiverC(AM_MEASURE);
-    M.Send->AMSenderC;
-    M.Receive->AMReceiverC;
+    M.Send -> AMSenderC;
+    M.Receive -> AMReceiverC;
 
     /* for sending "dummy" packets to the partner mote in intervals */
     components new TimerMilliC() as Timer;
-    M.Timer->Timer;
+    M.Timer -> Timer;
 
     /* for getting the sender of received dummy packet */
-    M.AMPacket->ActiveMessageC;
+    M.AMPacket -> ActiveMessageC;
 
     /* for getting RSSI value */
     components CC2420PacketC;
-    M.RssiPacket->CC2420PacketC;
+    M.RssiPacket -> CC2420PacketC;
 }

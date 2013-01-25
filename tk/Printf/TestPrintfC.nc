@@ -1,4 +1,4 @@
-/*
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
  * Copyright (c) 2006 Washington University in St. Louis.
  * All rights reserved.
  *

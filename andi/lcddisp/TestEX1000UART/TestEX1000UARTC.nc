@@ -1,4 +1,4 @@
-/*****************************************************************************************
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
  * Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
  * Copyright (c) 2005 Arch Rock Corporation

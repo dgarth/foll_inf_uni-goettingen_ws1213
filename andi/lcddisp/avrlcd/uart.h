@@ -1,4 +1,4 @@
-#ifndef UART_H
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 #define UART_H
 /************************************************************************
 Title:    Interrupt UART library with receive/transmit circular buffers

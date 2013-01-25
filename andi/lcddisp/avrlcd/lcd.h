@@ -1,4 +1,4 @@
-#ifndef LCD_H
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 #define LCD_H
 #endif
 #define FIRST 0x00

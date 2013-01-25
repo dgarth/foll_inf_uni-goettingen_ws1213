@@ -1,4 +1,4 @@
-
+//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 #ifndef CONSOLE_MSG_H
 #define CONSOLE_MSG_H
 

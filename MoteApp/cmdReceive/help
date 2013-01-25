@@ -1,0 +1,10 @@
+#Header aus tos libs einfuegen
+#im Makefile bspw.:
+CFLAGS += -I$(TOSDIR)/lib/printf
+#einfuegen
+
+#AM Type bei new AM_Sender("AM type") || new AM_Receiver("AM type")
+#Habe gelesen, dass die Sender/Receiver nur Pakete von Sendern mit gleichem AM type empfangen
+
+#printf client starten
+java net.tinyos.tools.PrintfClient -comm serial@/dev/ttyUSBXXX:telosb
