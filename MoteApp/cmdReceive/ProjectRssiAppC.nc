@@ -1,4 +1,4 @@
-//vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
+// vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 #include "/opt/tinyos-2.1.2/tos/lib/printf/printf.h"
 #define NEW_PRINTF_SEMANTICS
 configuration ProjectRssiAppC
