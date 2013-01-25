@@ -81,8 +81,8 @@ implementation {
             case CMD_NEWMEASURE:
                 unpack(cmd->data, "__HHH",
                         &measureSet,
-                        &measureOpts.count,
-                        &measureOpts.interval
+                        &measureOpts.count//,
+                        //&measureOpts.interval
                       );
 
                 measureOpts.partner = (TOS_NODE_ID == id1) ? id2 : id1;
