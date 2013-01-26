@@ -33,9 +33,11 @@ suffix=".ermahgerd_erndernt"
 SIMPLE_BACKUP_SUFFIX=$suffix indent $args $@
 find -name "*${suffix}" -delete
 
-# GNU indent turns "A -> B" to "A->B". Undo that for files containing configuration
 for f in $@; do
+    # GNU indent turns "A -> B" to "A->B". Undo that for files containing configuration
     if grep -q '^configuration' $f; then
         sed -i -e 's/->/ -> /g' $f;
     fi
+    # change "Interface < type >" back to "Interface<type>"
+    sed -i -e 's/ < \(\w*\) > \?as/<\1> as/' $f;
 done
