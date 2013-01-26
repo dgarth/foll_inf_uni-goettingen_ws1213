@@ -8,7 +8,7 @@ module MeasureP
 
     uses
     {
-        interface Timer < TMilli >;
+        interface Timer<TMilli>;
 
         interface SplitControl as RadioControl;
         interface AMSend as Send;
