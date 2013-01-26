@@ -132,27 +132,25 @@ implementation {
 
 	command void NodeTools.debugPrint(const char* str) {
 		size_t len;
-		uint8_t i;
 		node_msg_t msg;
 		uint8_t msgCount = 0;
 
 		msg.cmd = DEBUG_OUTPUT;
 		len = strlen(str);
 
-		// Nachrichten mit je 25 Zeichen produzieren
+		// Nachrichten mit je MAX_DATA Zeichen produzieren
 		while (len > 0) {
-			for (i = 0; i < (len <= 25 ? len : 25); i++) {
-				msg.data[i] = str[25 * msgCount + i];
-			}
-			msg.length = i;
+			size_t chunk = (len <= MAX_DATA) ? len : MAX_DATA;
+			memcpy(msg.data, &str[MAX_DATA * msgCount], chunk);
+			msg.length = chunk;
 
-			if (len > 25) {
+			if (len > MAX_DATA) {
 				msg.moreData = 1;
 			} else {
 				msg.moreData = 0;
 			}
 
-			len -= i;
+			len -= chunk;
 			msgCount++;
 
 			call NodeTools.enqueueMsg(&msg);
