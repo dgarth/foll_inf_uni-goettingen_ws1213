@@ -112,7 +112,7 @@ implementation
             call DisUpdate.change(&disMsg);
         }
         /*if(!busy){
-            ourPayload= (node_msg_t*) call ColSend.getPayload(&pktToBeSend, sizeof(node_msg_t));
+            ourPayload = call ColSend.getPayload(&pktToBeSend, sizeof(node_msg_t));
             ourPayload->cmd=CMD_LEDON;
             ourPayload->data[0]=1;
             ourPayload->data[1]=1;
@@ -133,8 +133,8 @@ implementation
 
             busy = FALSE;
             /* Debug kram, kann weg wenn ausprobiert */
-            ourPayload= (node_msg_t*) call ColSend.getPayload(msg, sizeof(node_msg_t));
-            if(ourPayload->cmd==CMD_LEDON)
+            ourPayload = call ColSend.getPayload(msg, sizeof(node_msg_t));
+            if(ourPayload->cmd == CMD_LEDON)
                 call Leds.led1Toggle();
         }
 
@@ -144,7 +144,7 @@ implementation
 
 
 
-       const node_msg_t* newMsg = (node_msg_t*) call DisMsg.get();
+       const node_msg_t* newMsg = call DisMsg.get();
         /* Hier kommt jetzt der update kram rein 
         * Nicht in AMSend/Receive und so weiter...
         *
@@ -219,7 +219,7 @@ implementation
             case CMD_REPORT:
             	if (newMsg->data[0] != myID )
             		return;
-            	sendingMsg = (node_msg_t*) call ColSend.getPayload(&pktToBeSend, sizeof(node_msg_t));;
+            	sendingMsg = call ColSend.getPayload(&pktToBeSend, sizeof(node_msg_t));
             	sendingMsg->cmd=CMD_REPORT;
             	sendingMsg->data[0]=myID;
             	sendingMsg->data[1]=opts.partner;
@@ -245,7 +245,7 @@ implementation
 		}
         
         /* Collection Test */
-        ourPayload= (node_msg_t*) call ColSend.getPayload(msg, sizeof(node_msg_t));
+        ourPayload = call ColSend.getPayload(msg, sizeof(node_msg_t));
         if ( ourPayload->cmd == CMD_LEDON ){
             call Leds.led2Toggle();
             

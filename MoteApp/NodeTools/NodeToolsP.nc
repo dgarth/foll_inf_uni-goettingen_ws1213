@@ -167,7 +167,7 @@ implementation {
 		}
 		
 		/* Parameter kopieren (in eine eigene message_t-Instanz) */
-		pmsg = (node_msg_t*) call SerialPacket.getPayload(&sPacket, sizeof(node_msg_t));
+		pmsg = call SerialPacket.getPayload(&sPacket, sizeof(node_msg_t));
 		memcpy(pmsg, call NodeTools.dequeueMsg(), sizeof(node_msg_t));
 
       	result = call SerialAMSend.send(AM_BROADCAST_ADDR, &sPacket, sizeof(node_msg_t));
@@ -218,7 +218,7 @@ implementation {
 				for (i = 0; i < pmsg->length; i++) {
 					if (myID == pmsg->data[i]) {
 						rmsg.cmd = CMD_ECHO;
-						rmsg.data[0] = (uint8_t) myID;
+						rmsg.data[0] = myID;
 						rmsg.length = 1;
 						call NodeTools.enqueueMsg(&rmsg);
 						break;
