@@ -39,5 +39,5 @@ for f in $@; do
         sed -i -e 's/->/ -> /g' $f;
     fi
     # change "Interface < type >" back to "Interface<type>"
-    sed -i -e 's/ < \(\w*\) > \?as/<\1> as/' $f;
+    sed -i -e 's/ < \(.*\) >/<\1>/' $f;
 done
