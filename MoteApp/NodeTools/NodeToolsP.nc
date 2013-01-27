@@ -31,6 +31,7 @@ implementation {
 	bool locked = FALSE; // Lock, damit keine Daten verloren gehen.
 	bool sAvailable = FALSE; // Angabe, ob init() aufgerufen wurde.
 	uint8_t myID; // Eigene Radio-Adresse
+	bool outstandingOK = FALSE;
 
 	// Message queue
 	node_msg_t msgQueue[QUEUE_LEN];
@@ -124,6 +125,12 @@ implementation {
 	/* Kommunikation über den SerialPort */
 	command void NodeTools.serialSendOK() {
 		node_msg_t msg;
+
+		// nichts tun, falls kein OK aussteht
+		if (!outstandingOK) {
+			return;
+		}
+
 		msg.cmd = S_OK;
 		msg.length = 0;
 		msg.moreData = 0;
@@ -161,14 +168,22 @@ implementation {
 	task void serialSendMsg() {
 		error_t result;
 		node_msg_t *pmsg;
+		node_msg_t *curMsg;
 
-		if (call NodeTools.queueEmpty() || !sAvailable) {
+		if (call NodeTools.queueEmpty()) {
 			return;
 		}
-		
+
+		// Die Nachricht muss aus der Queue entfernt werden...
+		curMsg = call NodeTools.dequeueMsg();
+		// ...auch wenn das serielle Interface gar nicht verfügbar ist.
+		if (!sAvailable) {
+			return;
+		}
+
 		/* Parameter kopieren (in eine eigene message_t-Instanz) */
 		pmsg = call SerialPacket.getPayload(&sPacket, sizeof(node_msg_t));
-		memcpy(pmsg, call NodeTools.dequeueMsg(), sizeof(node_msg_t));
+		memcpy(pmsg, curMsg, sizeof(node_msg_t));
 
       	result = call SerialAMSend.send(AM_BROADCAST_ADDR, &sPacket, sizeof(node_msg_t));
 		if (result == SUCCESS) {
@@ -208,6 +223,8 @@ implementation {
 			return bufPtr;
 		}
 
+		// serialSendOK wird erwartet
+		outstandingOK = TRUE;
 		// Speicher der Antwortnachricht auf 0 setzen	
 		memset(&rmsg, 0, sizeof(node_msg_t));
 

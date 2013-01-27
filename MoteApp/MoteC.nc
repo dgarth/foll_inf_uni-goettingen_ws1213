@@ -10,26 +10,30 @@
 
 module MoteC {
     uses {
-        interface NodeTools;
+        interface NodeTools; // Konsolensteuerung
         interface Boot;
         interface Measure;
         interface LcdMenu as Lcd;
+		interface NodeComm; // Collection & Dissemination
     }
 }
 
 implementation {
     uint16_t measureSet; // Messreihe
     struct measure_options measureOpts; // Messoptionen
-
     node_msg_t lcdCommand;
 
     /* Prototypes */
-    void handleCommand(node_msg_t *msg);
+    void handleCommand(const node_msg_t *msg);
 
     event void Boot.booted(void) {
+		call NodeComm.init();
+//#ifdef PCMOTE
         call NodeTools.serialInit();
-        // Andis LCD ansprechen
+//#endif
+//#ifdef LCDMOTE
         call Lcd.getUserCmd(&lcdCommand);
+//#endif
     }
 
     /* Empfängt Kommandos vom LCD. */
@@ -43,12 +47,17 @@ implementation {
     event void NodeTools.onSerialCommand(node_msg_t* cmd) {
         handleCommand(cmd);
     }
-    // Dissemination receive event handler
 
-    event void Measure.setupDone(error_t error) {
+	/* Empfängt Kommandos, die von anderen Nodes per
+	 * Dissemination weitergeleitet wurden */
+	event void NodeComm.dissReceive(const node_msg_t* cmd) {
+		handleCommand(cmd);
+	}
+
+	event void Measure.setupDone(error_t error) {
     }
 
-    void handleCommand(node_msg_t* cmd) {
+    void handleCommand(const node_msg_t* cmd) {
         uint8_t id1, id2;
         bool cmd_ok = FALSE;
 
@@ -69,7 +78,7 @@ implementation {
             if (TOS_NODE_ID != id1 && TOS_NODE_ID != id2) {
                 cmd_ok = FALSE;
             }
-        }
+        } //TODO else: NodeComm.dissSend(cmd) // Kommando im Netzwerk verteilen (ALLE, nicht nur messbezogene!)
 
         /* the answer to either of the above was NO -> do nothing */
         if (!cmd_ok) {
@@ -120,7 +129,16 @@ implementation {
         call NodeTools.enqueueMsg(&m);
         // Report an das LCD senden
         call Lcd.showReport(&m);
+		// Report per Collection senden
+		call NodeComm.collSend(&m);
     }
+
+	/* Report per Collection empfangen. An die MoteConsole
+	 * senden und/oder auf dem LCD ausgeben. */
+	event void NodeComm.collReceive(node_msg_t* msg) {
+        call NodeTools.enqueueMsg(msg);
+        call Lcd.showReport(msg);
+	}
 
     event void Measure.stopped(void) {
         call NodeTools.debugPrint("Measure stopped.");

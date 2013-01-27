@@ -10,6 +10,8 @@
 #define LED_GREEN 2
 #define LED_BLUE 4
 
+#define SINK_ID 10
+
 /*** Kommandos ***/
 enum commands {
     S_OK = 1,

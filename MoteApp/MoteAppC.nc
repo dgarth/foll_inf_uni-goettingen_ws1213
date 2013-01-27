@@ -1,7 +1,5 @@
 // vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
-//
-
 /**
 **/
 
@@ -23,4 +21,7 @@ implementation {
 
 	components LcdMenuC;
 	App.Lcd -> LcdMenuC;
+
+	components NodeCommC;
+	App.NodeComm -> NodeCommC;
 }
