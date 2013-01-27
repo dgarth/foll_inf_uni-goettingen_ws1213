@@ -201,9 +201,11 @@ implementation {
 					getMid();
 				break;
 				case 4:
-					quantity = quantity<<1;
-						if(!quantity)
+					if(!quantity)
 							quantity=1;
+					else
+						quantity = quantity<<1;
+				
 					getQuantity();
 				break;
 			}
