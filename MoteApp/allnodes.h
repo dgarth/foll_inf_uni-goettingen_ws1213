@@ -101,7 +101,9 @@ typedef nx_struct node_msg {
 
 enum {
 	AM_NODE_MSG = 0x89,
-	AM_MEASURE = 42
+	AM_MEASURE = 42,
+	AM_COLLECTION = 0xee,
+	AM_DISS_NODEMSG = 0x1234
 };
 
 #endif

@@ -23,16 +23,16 @@ implementation {
 	NodeCommP.DisControl -> DisseminationC;
 
 	// DisseminatorC(Datentyp, Key); jeder Datentyp braucht seinen eigenen Key
-	components new DisseminatorC(node_msg_t, 0x1234) as DisMsg;
+	components new DisseminatorC(node_msg_t, AM_DISS_NODEMSG) as DisMsg;
 	NodeCommP.DisMsg -> DisMsg;
 	NodeCommP.DisUpdate -> DisMsg;
 
 	// Collection
 	components CollectionC as Collector;
-	components new CollectionSenderC(0xee);
+	components new CollectionSenderC(AM_COLLECTION);
 	NodeCommP.RoutingControl -> Collector;
 	NodeCommP.ColSend -> CollectionSenderC;
-	NodeCommP.ColReceive -> Collector.Receive[0xee];
+	NodeCommP.ColReceive -> Collector.Receive[AM_COLLECTION];
 	NodeCommP.RootControl -> Collector;
 }
 
