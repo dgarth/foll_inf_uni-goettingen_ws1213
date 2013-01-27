@@ -1,7 +1,5 @@
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Scanner;
-import java.util.Arrays;
+import java.io.*;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 
 import net.tinyos.message.*;
@@ -15,20 +13,26 @@ public class MoteConsole implements MessageListener {
 		public T2 b;
 	}
 
+	private final int MAX_DATA = 10;
 	private boolean debug;
-	private MoteIF moteIF;
-	private NodeMsg nodeMsgObj;
-	// aktuelles Paket ist unvollständig
-	boolean moreData;
-
-	// Synchronisation der Ausgabe
-	Semaphore outLock;
+	private boolean localCmd;
+	private MoteIF moteIF; // serielles Interface
+	private NodeMsg nodeMsgObj; // gesendetes/empfangenes Paket
+	boolean moreData; // aktuelles Paket ist unvollständig
+	Semaphore outLock; // Synchronisation der Ausgabe
+	private PrintStream logFile;
+	private String logPath;
 
 	public MoteConsole(MoteIF moteIF) {
 		this.debug = false;
-		this.outLock = new Semaphore(1);
+		this.localCmd = false;
 		this.moteIF = moteIF;
 		this.nodeMsgObj = new NodeMsg();
+		this.moreData = false;
+		this.outLock = new Semaphore(1);
+		this.logFile = null;
+		this.logPath = null;
+
 		if (moteIF != null) {
 			this.moteIF.registerListener(this.nodeMsgObj, this);
 		}
@@ -95,18 +99,28 @@ public class MoteConsole implements MessageListener {
 				continue;
 			}
 
-			// help, exit
+			// Local command determination
 			if (tokens[0].equals("help")) {
 				printHelp();
-				outLock.release();
-				continue;
+				localCmd = true;
 			} else if (tokens[0].equals("quit") || tokens[0].equals("exit")) {
 				bContinue = false;
+				localCmd = true;
+			} else if (tokens[0].equals("setlog")) {
+				setLogfile(tokens.length == 2 ? tokens[1] : null);
+				localCmd = true;
+			} else if (tokens[0].equals("printlog")) {
+				printLogfile(tokens.length == 2 ? tokens[1] : null);
+				localCmd = true;
+			}
+
+			if (localCmd) {
+				localCmd = false;
 				outLock.release();
 				continue;
 			}
 
-			// Command determination
+			// Mote command determination
 			if (tokens[0].startsWith("led")) {
 				// LED commands
 				if (tokens[0].equals("ledon")) {
@@ -147,7 +161,7 @@ public class MoteConsole implements MessageListener {
 				System.out.println("invalid command or argument.");
 				outLock.release();
 			} else {
-				if (dataObj.b > 25) { System.out.println("warn: data too long"); }
+				if (dataObj.b > MAX_DATA) { System.out.println("warn: data too long"); }
 				msg.set_cmd(cmd);
 				msg.set_data(dataObj.a);
 				msg.set_length(dataObj.b);
@@ -155,6 +169,8 @@ public class MoteConsole implements MessageListener {
 					if (debug) { System.out.println("sending: " + msg.toString()); }
 					if (this.moteIF != null) {
 						moteIF.send(0, msg);
+					} else {
+						outLock.release();
 					}
 				} catch (IOException ex) {
 					System.out.println(ex.toString());
@@ -168,12 +184,12 @@ public class MoteConsole implements MessageListener {
 
 	private Pair<short[], Short> getDataForCmd(short cmd, String... args) {
 		Pair<short[], Short> result = new Pair<short[], Short>();
-		short data[] = new short[25];
+		short data[] = new short[MAX_DATA];
 		short len = 0;
 
 		switch (cmd) {
 			case MoteCommands.CMD_ECHO:
-				if (args.length == 0 || args.length > 25) { return null; }
+				if (args.length == 0 || args.length > MAX_DATA) { return null; }
 				for (int i = 0; i < args.length; i++) {
 					data[i] = Short.parseShort(args[i]);
 				}
@@ -198,17 +214,12 @@ public class MoteConsole implements MessageListener {
 				break;
 
 			case MoteCommands.CMD_NEWMEASURE:
-				if (args.length < 4 || args.length > 5) { return null; }
+				if (args.length != 4) { return null; }
 				data[0] = Short.parseShort(args[0]);
 				data[1] = Short.parseShort(args[1]);
 				storeWORD(Short.parseShort(args[2]), data, 2);
-				storeDWORD(Integer.parseInt(args[3]), data, 4);
-				len = 8;
-
-				if (args.length == 5) {
-					len = (short) storeOptions(args[4], data, len);
-				}
-
+				storeWORD(Short.parseShort(args[3]), data, 4);
+				len = 6;
 				break;
 
 			case MoteCommands.CMD_STARTMS:
@@ -238,7 +249,79 @@ public class MoteConsole implements MessageListener {
 		return 0;
 	}
 
-	private int storeOptions(String opts, short[] store, int offset) {
+	private void setLogfile(String path) {
+
+		if (path == null) {
+			System.out.println("No argument specified.");
+			return;
+		}
+
+		if (path.equals("none")) {
+			if (logPath == null) {
+				System.out.println("Not currently logging");
+			} else {
+				System.out.println("closing log file " + logPath);
+				logFile.flush();
+				logFile.close();
+				logFile = null;
+				logPath = null;
+			}
+		} else {
+			if (logPath != null) {
+				System.out.println("Already logging to " + logPath);
+			} else {
+				logPath = path;
+				try {
+					// open & append or create, autoflush
+					logFile = new PrintStream(new FileOutputStream(logPath, true), true);
+					System.out.println("File '" + logPath + "' opened.");
+				} catch (FileNotFoundException ex) {
+					System.out.println("Error: Could not open file.");
+					logFile = null;
+					logPath = null;
+				}
+			}
+		}
+	}
+
+	private void printLogfile(String param) {
+		int lines = 0;
+		Process p = null;
+		BufferedReader br = null;
+		String line = null;
+		String cmd = null;
+
+		try {
+			lines = Integer.parseInt(param);
+		} catch (NumberFormatException ex) { /* print all */ }
+
+		if (logPath == null) {
+			System.out.println("Not currently logging");
+			return;
+		}
+
+		if (lines > 0) {
+			// call tail -lines logPath
+			cmd = "/usr/bin/tail -" + lines + " " + logPath;
+		} else {
+			// call cat logPath
+			cmd = "/bin/cat " + logPath;
+		}
+
+		try {
+			p = Runtime.getRuntime().exec(cmd);
+			p.waitFor();
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			line = br.readLine();
+			while (line != null) {
+				System.out.println(line);
+				line = br.readLine();
+			}
+		} catch(IOException e1) {
+		} catch(InterruptedException e2) {}
+	}
+
+	/*private int storeOptions(String opts, short[] store, int offset) {
 		// opts = "opt1=value1,opt2=value2"
 		String[] options = opts.split(",");
 		int optCount = 0;
@@ -277,7 +360,7 @@ public class MoteConsole implements MessageListener {
 		}
 
 		return offset;
-	}
+	}*/
 
 	public void messageReceived(int to, Message msg) {
 		NodeMsg nm = (NodeMsg) msg;
@@ -285,7 +368,7 @@ public class MoteConsole implements MessageListener {
 		short dataLength;
 
 		if (nm == null) {
-			System.out.println("WARN: NULL-packet received.");
+			logMsgln("WARN: NULL-packet received.");
 			return;
 		}
 
@@ -300,36 +383,36 @@ public class MoteConsole implements MessageListener {
 
 			case MoteCommands.CMD_ECHO:
 				if (data.length > 0) {
-					System.out.println(String.format("Echo reply from node %d", data[0]));
+					logMsgln(String.format("Echo reply from node %d", data[0]));
 				}
 				break;
 
 			case MoteCommands.CMD_REPORT:
-				String fmt = String.format("Measure set %d from [%d --> %d] at %d, RSSI = %d",
-				getWORD(data, 1), data[8], data[0], getDWORD(data, 3), data[7]);
-				System.out.println(fmt);
+				String fmt = String.format("Measure #%d from set %d [%d --> %d], RSSI = %d",
+				getWORD(data, 4), getWORD(data, 4), data[1], data[0], data[6]);
+				logMsgln(fmt);
 				break;
 
 			case MoteCommands.DEBUG_OUTPUT:
 				if (!moreData) {
 					// neue Meldung
-					System.out.print("Debug: ");
+					logMsg("Debug: ");
 				}
 
 				// Daten vom letzten Paket ggf. fortsetzen
 				for (int i = 0; i < dataLength; i++) {
-					System.out.print((char) data[i]);
+					logMsg(((Short)data[i]).toString());
 				}
 
 				if (!moreData) {
 					// alles gesendet - Meldung abschließen
-					System.out.println();
+					logMsgln("");
 				}
 				break;
 
 			default:
-				System.out.println("WARN: Received undefined message.");
-				if (debug) { System.out.println("Undefined: " + nm.toString()); }
+				logMsgln("WARN: Received undefined message.");
+				if (debug) { logMsgln("Undefined: " + nm.toString()); }
 				break;
 		}
 
@@ -337,21 +420,40 @@ public class MoteConsole implements MessageListener {
 		return;
 	}
 
+	private void logMsg(String m) {
+		if (logFile != null) {
+			logFile.print(m);
+		} else {
+			System.out.print(m);
+		}
+	}
+
+	private void logMsgln(String m) {
+		if (logFile != null) {
+			logFile.println(m);
+		} else {
+			System.out.println(m);
+		}
+	}
+
 	private void printHelp() {
 		PrintStream ps = System.out;
-		ps.println("Available commands:");
-		ps.println("echo ID [further IDs]");
-		ps.println("ledon ID red/green/blue");
-		ps.println("ledoff ID red/green/blue");
-		ps.println("ledtoggle ID red/green/blue");
-		ps.println("ledblink ID red/green/blue times");
-		ps.println("newmeasure ID1 ID2 measure_set stime [opt1=value1,opt2=value2,...]");
-		ps.println("newmeasure options:");
-		ps.println("   mcount (measurement count, uint16)");
-		ps.println("   mnode (monitor node ID, uint8)");
-		ps.println("startms ID1 ID2");
-		ps.println("stopms ID1 ID2");
-		ps.println("clearms ID1 ID2");
+		ps.println("Mote commands:");
+		ps.println("  echo ID [further IDs]");
+		ps.println("  ledon ID red/green/blue");
+		ps.println("  ledoff ID red/green/blue");
+		ps.println("  ledtoggle ID red/green/blue");
+		ps.println("  ledblink ID red/green/blue times");
+		ps.println("  newmeasure ID1 ID2 measure_set measure_count");
+		ps.println("  startms ID1 ID2");
+		ps.println("  stopms ID1 ID2");
+		ps.println("  clearms ID1 ID2");
+		ps.println();
+		ps.println("Local commands:");
+		ps.println("  quit/exit");
+		ps.println("  help");
+		ps.println("  setlog <file>/none");
+		ps.println("  printlog [last n lines]");
 	}
 
 	private short loword(int dword) {
