@@ -164,7 +164,7 @@ implementation
          * (a dummy packet from our partner)?
          */
         if (running && len == 0 && source == config.partner) {
-            rssi = call RssiPacket.getRssi(msg) - RSSI_OFFSET;
+            rssi = call RssiPacket.getRssi(msg) + RSSI_OFFSET;
             signal Measure.received(rssi);
         }
         return msg;
