@@ -29,20 +29,10 @@ implementation {
 
 	// Collection
 	components CollectionC as Collector;
-	components new CollectionSenderC(AM_COLLECTION_SINK) as ColSendSink;
-	components new CollectionSenderC(AM_COLLECTION_MONITOR) as ColSendMonitor;
+	components new CollectionSenderC(AM_COLLECTION);
 	NodeCommP.RoutingControl -> Collector;
-	NodeCommP.ColSendSink -> ColSendSink;
-	NodeCommP.ColSendMonitor -> ColSendMonitor;
-
-    #if NODETYPE == NODETYPE_SINK
-	NodeCommP.ColReceive -> Collector.Receive[AM_COLLECTION_SINK];
-    #elif NODETYPE == NODETYPE_MONITOR
-	NodeCommP.ColReceive -> Collector.Receive[AM_COLLECTION_MONITOR];
-    #endif
-
-    #if NODETYPE != NODETYPE_MEASURE
+	NodeCommP.ColSend -> CollectionSenderC;
+	NodeCommP.ColReceive -> Collector.Receive[AM_COLLECTION];
 	NodeCommP.RootControl -> Collector;
-    #endif
 }
 

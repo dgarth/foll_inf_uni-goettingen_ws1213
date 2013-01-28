@@ -2,6 +2,9 @@
 
 // NodeCommP.nc - Implementierung des Interfaces NodeComm.
 
+/**
+**/
+
 #include "../allnodes.h"
 
 module NodeCommP {
@@ -17,20 +20,16 @@ module NodeCommP {
 		interface DisseminationValue<node_msg_t> as DisMsg;
 		// Collection
 		interface StdControl as RoutingControl;
-		interface Send as ColSendSink;
-		interface Send as ColSendMonitor;
-
-        #if NODETYPE != NODETYPE_MEASURE
+		interface Send as ColSend;
 		interface Receive as ColReceive;
 		interface RootControl;
-        #endif
 	}
 }
 
 implementation {
 	bool available = FALSE;
-	bool sinkBusy = FALSE, monitorBusy = FALSE;
-	message_t sinkPacket, monitorPacket;
+	bool collBusy = FALSE;
+	message_t collPacket;
 	node_msg_t *collMsg;
 
 	command void NodeComm.init() {
@@ -51,10 +50,10 @@ implementation {
 			result = call RoutingControl.start();
 			if (result != SUCCESS) { return; }
 
-            #if NODE_TYPE != NODE_MEASURE
-            result = call RootControl.setRoot();
-            if (result != SUCCESS) { return; }
-            #endif
+			if (TOS_NODE_ID == SINK_ID) {
+				result = call RootControl.setRoot();
+				if (result != SUCCESS) { return; }
+			}
 
 			available = TRUE;
 		}
@@ -73,36 +72,30 @@ implementation {
 	}
 
 	command void NodeComm.collSend(node_msg_t* msg) {
-		if (!available || sinkBusy || monitorBusy) {
-            return;
-        }
+		error_t result;
+
+		if (!available) { return; }
 
 		// Report an die Basisstation routen
-#define COLSEND(iface, packet, busyflag)                                    \
-        do {                                                                \
-            node_msg_t *m;                                                  \
-            m = call iface.getPayload(&packet, sizeof *m);                  \
-            memcpy(m, msg, sizeof *m);                                      \
-            if (call iface.send(&packet, sizeof *m) == SUCCESS) {           \
-                busyflag = TRUE;                                            \
-            }                                                               \
-        } while (0)
+		if (!collBusy) {
+			collMsg = call ColSend.getPayload(&collPacket, sizeof(node_msg_t));
+			// Nachricht in den lokalen Speicher kopieren und absenden.
+			memcpy(collMsg, msg, sizeof(node_msg_t));
+			result = call ColSend.send(&collPacket, sizeof(node_msg_t));
 
-        COLSEND(ColSendSink, sinkPacket, sinkBusy);
-        COLSEND(ColSendMonitor, monitorPacket, monitorBusy);
+			if (result == SUCCESS) {
+				collBusy = TRUE;
+			}
+		}
 	}
 
 	/*** Events ***/
 
-#define SENDDONE(iface, packet, busyflag)                                   \
-    event void iface.sendDone(message_t *msg, error_t error) {              \
-        if (&packet == msg) {                                               \
-            busyflag = FALSE;                                               \
-        }                                                                   \
-    }
-
-    SENDDONE(ColSendSink, sinkPacket, sinkBusy)
-    SENDDONE(ColSendMonitor, monitorPacket, monitorBusy)
+	event void ColSend.sendDone(message_t *msg, error_t error) {
+		if (&collPacket == msg) {
+			collBusy = FALSE;
+		}
+	}
 
 	// Kommando empfangen (Dissemination receive signalisieren)
 	event void DisMsg.changed() {
@@ -169,7 +162,6 @@ implementation {
     }
 
 	// Report empfangen (Collection receive signalisieren)
-    #if NODETYPE != NODETYPE_MEASURE
 	event message_t* ColReceive.receive(message_t *msg, void *payload, uint8_t len) {
 		node_msg_t *pmsg;
 
@@ -177,12 +169,11 @@ implementation {
 			return msg;
 		}
 
-        pmsg = call ColSendSink.getPayload(msg, sizeof(node_msg_t));
+        pmsg = call ColSend.getPayload(msg, sizeof(node_msg_t));
 		signal NodeComm.collReceive(pmsg);
 
 		return msg;
 	}
-    #endif
 
 	event void NodeTools.onSerialCommand(node_msg_t* cmd) {
 	}
