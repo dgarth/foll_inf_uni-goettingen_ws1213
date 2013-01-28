@@ -23,13 +23,17 @@ module NodeCommP {
 		interface Send as ColSend;
 		interface Receive as ColReceive;
 		interface RootControl;
+
+        // Weiterleitung Sink -> Monitor
+        interface AMSend as MonitorSend;
+        interface Receive as MonitorReceive;
 	}
 }
 
 implementation {
 	bool available = FALSE;
-	bool collBusy = FALSE;
-	message_t collPacket;
+	bool collBusy = FALSE, fwdBusy = FALSE;
+	message_t collPacket, fwdPacket;
 	node_msg_t *collMsg;
 
 	command void NodeComm.init() {
@@ -94,6 +98,12 @@ implementation {
 	event void ColSend.sendDone(message_t *msg, error_t error) {
 		if (&collPacket == msg) {
 			collBusy = FALSE;
+		}
+	}
+
+	event void MonitorSend.sendDone(message_t *msg, error_t error) {
+		if (&fwdPacket == msg) {
+			fwdBusy = FALSE;
 		}
 	}
 
@@ -163,17 +173,36 @@ implementation {
 
 	// Report empfangen (Collection receive signalisieren)
 	event message_t* ColReceive.receive(message_t *msg, void *payload, uint8_t len) {
-		node_msg_t *pmsg;
 
 		if (len != sizeof(node_msg_t)) {
 			return msg;
 		}
 
-        pmsg = call ColSend.getPayload(msg, sizeof(node_msg_t));
-		signal NodeComm.collReceive(pmsg);
+		signal NodeComm.collReceive(payload);
+
+        /* an Monitor Weiterleiten */
+        if (!fwdBusy) {
+            node_msg_t *outmsg =
+                call MonitorSend.getPayload(&fwdPacket, sizeof *outmsg);
+
+            memcpy(outmsg, payload, sizeof *outmsg);
+
+            if (call MonitorSend.send(
+                        MONITOR_ID, &fwdPacket, sizeof *outmsg) == SUCCESS) {
+                fwdBusy = TRUE;
+            }
+        }
 
 		return msg;
 	}
+
+    // Monitor Node: Weitergeleiteten Report empfangen
+    event message_t *MonitorReceive.receive(message_t *msg, void *payload, uint8_t len) {
+        if (TOS_NODE_ID == MONITOR_ID) {
+            signal NodeComm.collReceive(payload);
+        }
+        return msg;
+    }
 
 	event void NodeTools.onSerialCommand(node_msg_t* cmd) {
 	}

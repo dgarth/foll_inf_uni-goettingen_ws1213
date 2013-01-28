@@ -34,5 +34,11 @@ implementation {
 	NodeCommP.ColSend -> CollectionSenderC;
 	NodeCommP.ColReceive -> Collector.Receive[AM_COLLECTION];
 	NodeCommP.RootControl -> Collector;
+
+    // Forward Sink zu Monitor
+    components new AMSenderC(AM_MONITOR);
+    components new AMReceiverC(AM_MONITOR);
+    NodeCommP.MonitorSend -> AMSenderC;
+    NodeCommP.MonitorReceive -> AMReceiverC;
 }
 

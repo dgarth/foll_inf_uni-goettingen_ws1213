@@ -10,6 +10,7 @@
 #define LED_GREEN 2
 #define LED_BLUE 4
 
+#define MONITOR_ID 9
 #define SINK_ID 10
 
 
@@ -104,7 +105,8 @@ enum {
 	AM_NODE_MSG = 0x89,
 	AM_MEASURE = 42,
 	AM_COLLECTION = 0xee,
-	AM_DISS_NODEMSG = 0x1234
+	AM_DISS_NODEMSG = 0x1234,
+	AM_MONITOR = 13
 };
 
 #endif
