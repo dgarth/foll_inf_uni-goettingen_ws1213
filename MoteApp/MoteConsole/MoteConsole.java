@@ -389,7 +389,7 @@ public class MoteConsole implements MessageListener {
 
 			case MoteCommands.CMD_REPORT:
 				String fmt = String.format("Measure #%d from set %d [%d --> %d], RSSI = %d",
-				getWORD(data, 4), getWORD(data, 4), data[1], data[0], data[6]);
+				getWORD(data, 4), getWORD(data, 4), data[1], data[0], (byte)data[6]);
 				logMsgln(fmt);
 				break;
 

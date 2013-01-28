@@ -19,7 +19,7 @@ module PcMoteC {
 implementation {
 
     /* Prototypes */
-    void handleCommand(const node_msg_t *msg);
+    void handleCommand(node_msg_t *msg);
 
     event void Boot.booted(void) {
 		call NodeComm.init();
@@ -46,7 +46,7 @@ implementation {
     /* 
      * Schickt cmd einfach weiter ueber dissSend
      */
-    void handleCommand(const node_msg_t* cmd) {
+    void handleCommand(node_msg_t* cmd) {
         call NodeComm.dissSend(cmd);
         call NodeTools.serialSendOK();
     }
