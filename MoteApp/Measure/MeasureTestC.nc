@@ -1,42 +1,61 @@
 // vim: filetype=nc:tabstop=4:expandtab:shiftwidth=0:softtabstop=-1
 
-/**
-**/
-
 #include "../allnodes.h"
+#include "../pack.h"
 
-module MeasureTestC {
-    uses {
+module MeasureTestC
+{
+    uses
+    {
         interface NodeTools;
         interface Boot;
-        /*interface Timer<TMilli> as Timer;*/
         interface Measure;
     }
 }
 
-implementation {
-    event void Boot.booted(void) {
+implementation
+{
+
+    node_msg_t resp;
+    uint16_t series = 0, counter = 0;
+
+    struct measure_options m_opts = {
+        .partner = 0,
+        .count = 0,
+    };
+
+    event void Boot.booted(void)
+    {
         call NodeTools.serialInit();
+
+        /* start bidirectional test series between 1 and 2 */
+        m_opts.partner = TOS_NODE_ID ^ 0x3;
+        call Measure.setup(m_opts);
     }
-    
-    event void Measure.setupDone(error_t error) {
+
+    event void Measure.setupDone(error_t error)
+    {
+        counter = 0;
         call Measure.start();
     }
 
-    event void NodeTools.onSerialCommand(node_msg_t* cmd) {
-        struct measure_options opts = {
-            .partner = cmd->data[0],
-            .interval = 500,
-            .count = 0,
-        };
-        call Measure.setup(opts);
+    event void NodeTools.onSerialCommand(node_msg_t *cmd)
+    {
+        call Measure.setup(m_opts);
     }
 
-    event void Measure.received(uint8_t rssi, uint32_t time) {
-        call NodeTools.sendResponse(NULL);
+    event void Measure.received(int8_t rssi)
+    {
+        resp.cmd = CMD_REPORT;
+        resp.length = pack(resp.data, "BBHHb",
+                           TOS_NODE_ID, m_opts.partner, series, counter,
+                           rssi);
+        counter++;
+
+        call NodeTools.enqueueMsg(&resp);
     }
-    
-    event void Measure.stopped(void) {
-        call NodeTools.sendResponse(NULL);
+
+    event void Measure.stopped(void)
+    {
     }
 }
