@@ -17,7 +17,8 @@ module MeasureMoteC
 implementation
 {
 
-    uint16_t current_series;
+    uint16_t counter, current_series;
+
     uint8_t partner;
     bool setup_done;
 
@@ -104,14 +105,17 @@ implementation
         node_msg_t cmd;
 
         cmd.cmd = CMD_REPORT;
-        cmd.length = pack(cmd.data, "BBHHB",
-                          TOS_NODE_ID, partner, current_series, 0, rssi);
-
+        cmd.length =
+            pack(cmd.data, "BBHHB", TOS_NODE_ID, partner, current_series,
+                 counter, rssi);
         call NodeComm.collSend(&cmd);
+
+        counter++;
     }
 
     event void Measure.stopped(void)
     {
         current_series = 0;
+        counter = 0;
     }
 }
