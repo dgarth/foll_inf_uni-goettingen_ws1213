@@ -63,7 +63,7 @@ implementation {
 
         /* is the command related to a measure? */
         switch (cmd->cmd) {
-            case CMD_NEWMEASURE:
+            case CMD_NEWMS:
             case CMD_STARTMS:
             case CMD_STOPMS:
                 cmd_ok = TRUE;
@@ -87,7 +87,7 @@ implementation {
         }
 
         switch (cmd->cmd) {
-            case CMD_NEWMEASURE:
+            case CMD_NEWMS:
                 unpack(cmd->data, "__HHH",
                         &measureSet,
                         &measureOpts.count//,

@@ -7,7 +7,7 @@ COMMANDS =          \
 	CMD_LEDOFF      \
 	CMD_LEDTOGGLE   \
 	CMD_LEDBLINK    \
-	CMD_NEWMEASURE  \
+	CMD_NEWMS       \
 	CMD_STARTMS     \
 	CMD_STOPMS      \
 	CMD_CLEARMS     \

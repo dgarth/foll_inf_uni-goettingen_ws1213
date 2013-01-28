@@ -137,9 +137,9 @@ public class MoteConsole implements MessageListener {
 				// Echo command
 				cmd = MoteCommands.CMD_ECHO;
 
-			} else if (tokens[0].equals("newmeasure")) {
+			} else if (tokens[0].equals("newms")) {
 				// NewMeasure command
-				cmd = MoteCommands.CMD_NEWMEASURE;
+				cmd = MoteCommands.CMD_NEWMS;
 
 			} else if (tokens[0].endsWith("ms")) {
 				// Measure control commands
@@ -213,7 +213,7 @@ public class MoteConsole implements MessageListener {
 				len = 3;
 				break;
 
-			case MoteCommands.CMD_NEWMEASURE:
+			case MoteCommands.CMD_NEWMS:
 				if (args.length != 4) { return null; }
 				data[0] = Short.parseShort(args[0]);
 				data[1] = Short.parseShort(args[1]);
@@ -444,7 +444,7 @@ public class MoteConsole implements MessageListener {
 		ps.println("  ledoff ID red/green/blue");
 		ps.println("  ledtoggle ID red/green/blue");
 		ps.println("  ledblink ID red/green/blue times");
-		ps.println("  newmeasure ID1 ID2 measure_set measure_count");
+		ps.println("  newms ID1 ID2 measure_set measure_count");
 		ps.println("  startms ID1 ID2");
 		ps.println("  stopms ID1 ID2");
 		ps.println("  clearms ID1 ID2");

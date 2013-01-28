@@ -22,7 +22,7 @@ implementation {
 	char linebuf1[16], linebuf2[16];
 	bool c = FALSE,
 		r = FALSE;
-	uint8_t cmdType = CMD_NEWMEASURE, phase = 0, id1 = 1, id2 = 1;
+	uint8_t cmdType = CMD_NEWMS, phase = 0, id1 = 1, id2 = 1;
 	uint16_t quantity = 1, mid = 0;
 	uint32_t time = 0;
 	
@@ -61,8 +61,8 @@ implementation {
 	
 	void getCmdType(void) {
 		switch(cmdType) {
-			case CMD_NEWMEASURE:
-				sprintf(linebuf1, "Cmd: CMD_NEWMEASURE");
+			case CMD_NEWMS:
+				sprintf(linebuf1, "Cmd: CMD_NEWMS");
 			break;
 			case CMD_STARTMS:
 				sprintf(linebuf1, "Cmd: CMD_STARTMS");
@@ -181,7 +181,7 @@ implementation {
 				case 0:
 					cmdType++;
 					if(cmdType > CMD_CLEARMS)
-						cmdType = CMD_NEWMEASURE;
+						cmdType = CMD_NEWMS;
 					getCmdType();
 				break;
 				case 1:
@@ -220,7 +220,7 @@ implementation {
 		if(c) {
 			phase++;
 			//Falls wir Start/Stopp-Cmd eingeben, brauchen wir nur ID1 und ID2 zu fragen:
-			if((phase > 2) && (cmdType != CMD_NEWMEASURE)) {
+			if((phase > 2) && (cmdType != CMD_NEWMS)) {
 				phase = 5;
 				cmd_msg->length = 2;
 			}

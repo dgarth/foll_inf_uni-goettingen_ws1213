@@ -48,7 +48,7 @@ enum commands {
        data[1] = LED (0, 1, 2), uint8
        data[2] = blink count, uint8 */
 
-    CMD_NEWMEASURE,
+    CMD_NEWMS,
     /* Initiate a new measure between two nodes. Parameters:
        data[0] = ID1 (sending node), uint8
        data[1] = ID2 (receiving node), uint8
@@ -58,7 +58,7 @@ enum commands {
      */
 
     CMD_STARTMS,
-    /* Start a measure initiated with CMD_NEWMEASURE.
+    /* Start a measure initiated with CMD_NEWMS.
        data[0] = ID1 (sending node), uint8
        data[1] = ID2 (receiving node), uint8 */
 
@@ -68,14 +68,14 @@ enum commands {
        data[1] = ID2 (receiving node), uint8 */
 
     CMD_CLEARMS,
-    /* Lose a measure parnership initiated with CMD_NEWMEASURE. Parameters:
+    /* Lose a measure parnership initiated with CMD_NEWMS. Parameters:
        data[0] = ID1 (sending node), uint8
        data[1] = ID2 (receiving node), uint8 */
 
     CMD_REPORT,
     /* Report a measure result to the sink. Parameters:
        data[0] = ID (reporting node ID), uint8
-       data[1] = Partner ID (andere ID in CMD_NEWMEASURE), uint8
+       data[1] = Partner ID (andere ID in CMD_NEWMS), uint8
        data[2]...data[3] = Messreihe, uint16
        data[4]...data[5] = Nummer der Messung, uint16
        data[6] = RSSI value, uint8

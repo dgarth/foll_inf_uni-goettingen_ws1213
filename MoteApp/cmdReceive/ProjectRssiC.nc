@@ -193,7 +193,7 @@ implementation
                     call NodeTools.flashLed(led, newMsg->data[2]);
                 }
                 break;
-            case CMD_NEWMEASURE:
+            case CMD_NEWMS:
                 if ( newMsg->data[0] == myID ) {
                     opts.partner = newMsg->data[1];
                 }

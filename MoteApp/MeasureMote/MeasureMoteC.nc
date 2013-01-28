@@ -46,7 +46,7 @@ implementation
 
         /* filter "uninteresting" commands */
         switch (cmd->cmd) {
-            case CMD_NEWMEASURE:
+            case CMD_NEWMS:
             case CMD_STARTMS:
             case CMD_STOPMS:
                 break;
@@ -63,7 +63,7 @@ implementation
         }
 
         /* handle command */
-        if (cmd->cmd == CMD_NEWMEASURE) {
+        if (cmd->cmd == CMD_NEWMS) {
             struct measure_options opt;
 
             unpack(cmd->data, "__HH", &current_series, &opt.count);
