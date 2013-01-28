@@ -10,6 +10,11 @@
 #define LED_GREEN 2
 #define LED_BLUE 4
 
+
+/* parts of the code in NodeComm behave different depending on the "node type".
+   set this appropriately in the apps Makefile using e.g.
+   CFLAGS += -DNODETYPE=NODETYPE_SINK
+ */
 #define NODETYPE_MEASURE 1
 #define NODETYPE_SINK 2
 #define NODETYPE_MONITOR 3
@@ -18,6 +23,7 @@
 #warning NODETYPE not defined, using NODETYPE_MEASURE
 #define NODETYPE NODETYPE_MEASURE
 #endif
+
 
 /*** Kommandos ***/
 enum commands {
