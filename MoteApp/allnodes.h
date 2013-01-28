@@ -78,8 +78,8 @@ enum commands {
        data[1] = Partner ID (andere ID in CMD_NEWMS), uint8
        data[2]...data[3] = Messreihe, uint16
        data[4]...data[5] = Nummer der Messung, uint16
-       data[6] = RSSI value, uint8
-       -> format "BBHHB"
+       data[6] = RSSI value, int8
+       -> format "BBHHb"
      */
 
     DEBUG_OUTPUT,
