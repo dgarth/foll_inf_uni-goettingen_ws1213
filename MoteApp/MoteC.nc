@@ -110,12 +110,12 @@ implementation {
     }
 
     /* Neue Messung empfangen - Report senden */
-    event void Measure.received(uint8_t rssi) {
+    event void Measure.received(int8_t rssi) {
         node_msg_t m;
 
         m.cmd = CMD_REPORT;
 
-        m.length = pack(m.data, "BBHHB",
+        m.length = pack(m.data, "BBHHb",
                 TOS_NODE_ID,
                 measureOpts.partner,
                 measureSet,

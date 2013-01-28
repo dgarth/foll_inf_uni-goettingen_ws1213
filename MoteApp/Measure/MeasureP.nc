@@ -155,7 +155,7 @@ implementation
     event message_t *Receive.receive(message_t *msg, void *payload,
                                      uint8_t len)
     {
-        uint8_t rssi;
+        int8_t rssi;
 
         /* get sender node ID */
         am_addr_t source = call AMPacket.source(msg);

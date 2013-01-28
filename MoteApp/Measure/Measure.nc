@@ -50,7 +50,7 @@ interface Measure
     /**
      * Signalled when a measure packet was received.
      *
-     * @param <b>rssi</b> measured RSSI value in [0, 255]
+     * @param <b>rssi</b> measured RSSI value
      */
-    event void received(uint8_t rssi);
+    event void received(int8_t rssi);
 }

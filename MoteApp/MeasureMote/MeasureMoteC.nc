@@ -100,13 +100,13 @@ implementation
         }
     }
 
-    event void Measure.received(uint8_t rssi)
+    event void Measure.received(int8_t rssi)
     {
         node_msg_t cmd;
 
         cmd.cmd = CMD_REPORT;
         cmd.length =
-            pack(cmd.data, "BBHHB", TOS_NODE_ID, partner, current_series,
+            pack(cmd.data, "BBHHb", TOS_NODE_ID, partner, current_series,
                  counter, rssi);
         call NodeComm.collSend(&cmd);
 
