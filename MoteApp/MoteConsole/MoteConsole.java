@@ -22,6 +22,7 @@ public class MoteConsole implements MessageListener {
 	Semaphore outLock; // Synchronisation der Ausgabe
 	private PrintStream logFile;
 	private String logPath;
+	private BatchMeasure batch;
 
 	public MoteConsole(MoteIF moteIF) {
 		this.debug = false;
@@ -32,6 +33,7 @@ public class MoteConsole implements MessageListener {
 		this.outLock = new Semaphore(1);
 		this.logFile = null;
 		this.logPath = null;
+		this.batch = new BatchMeasure();
 
 		if (moteIF != null) {
 			this.moteIF.registerListener(this.nodeMsgObj, this);
@@ -137,6 +139,33 @@ public class MoteConsole implements MessageListener {
 				localCmd = true;
 			} else if (tokens[0].equals("printlog")) {
 				printLogfile(tokens.length == 2 ? tokens[1] : null);
+				localCmd = true;
+			} else if (tokens[0].equals("b") || tokens[0].equals("batch")) {
+				if (tokens[1].equals("l") || tokens[1].equals("load")) {
+					// load batch measure file
+					batch.load(tokens[2]);
+				} else if (tokens[1].equals("c") || tokens[1].equals("clear")) {
+					// remove all items from batch queue
+					batch.clear();
+				} else if (tokens[1].equals("n") || tokens[1].equals("next")) {
+					// send NEWMS and STARTMS with values from the next line
+					short next[] = batch.next();
+					if (next != null) {
+						short data[] = new short[MAX_DATA];
+						data[0] = next[0];
+						data[1] = next[1];
+						storeWORD(next[2], data, 2);
+						storeWORD(next[3], data, 4);
+						System.out.printf(
+								"Starting measure %d with nodes %d and %d (%d packets)\n",
+								next[2], next[0], next[1], next[3]);
+						sendCmd(MoteCommands.CMD_NEWMS, data, 6);
+						try { Thread.sleep(500); } catch (InterruptedException e) { ; }
+						sendCmd(MoteCommands.CMD_STARTMS, data, 2);
+					} else {
+						System.out.println("Nothing to do");
+					}
+				}
 				localCmd = true;
 			}
 
@@ -461,6 +490,9 @@ public class MoteConsole implements MessageListener {
 		ps.println("  help");
 		ps.println("  setlog <file>/none");
 		ps.println("  printlog [last n lines]");
+		ps.println("  batch load FILE - load batch measures from FILE");
+		ps.println("  batch next      - start next batch measure");
+		ps.println("  batch clear     - clear all batch measures ");
 	}
 
 	private short loword(int dword) {
