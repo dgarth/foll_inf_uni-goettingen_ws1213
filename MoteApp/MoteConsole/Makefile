@@ -1,4 +1,4 @@
-default: MoteConsole.java
+default: MoteConsole.class
 
 COMMANDS =          \
 	S_OK            \
@@ -14,8 +14,8 @@ COMMANDS =          \
 	CMD_REPORT      \
 	DEBUG_OUTPUT    \
 
-MoteConsole.java: MoteCommands.java NodeMsg.java
-	javac $@
+%.class: %.java MoteCommands.java NodeMsg.java BatchMeasure.java
+	javac $<
 
 MoteCommands.java: ../allnodes.h
 	ncg java -target=null -java-classname=$(basename $@ .java) $< $(COMMANDS) -o $@
