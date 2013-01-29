@@ -70,6 +70,32 @@ public class MoteConsole implements MessageListener {
 		return;
 	}
 
+	private void sendCmd(short cmd, short data[], int len) {
+		// Transmit request
+		if (cmd < 0 || data == null || data.length <= 0) {
+			System.out.println("invalid command or argument.");
+			outLock.release();
+			return;
+		}
+		if (data.length > MAX_DATA) { System.out.println("warn: data too long"); }
+
+		NodeMsg msg = new NodeMsg();
+		msg.set_cmd(cmd);
+		msg.set_data(data);
+		msg.set_length((short) len);
+
+		try {
+			if (debug) { System.out.println("sending: " + msg.toString()); }
+			if (this.moteIF != null) {
+				moteIF.send(0, msg);
+			} else {
+				outLock.release();
+			}
+		} catch (IOException ex) {
+			System.out.println(ex.toString());
+		}
+	}
+
 	private void runConsole() {
 		boolean bContinue = true;
 		String input;
@@ -156,26 +182,7 @@ public class MoteConsole implements MessageListener {
 			tokens = Arrays.copyOfRange(tokens, 1, tokens.length);
 			dataObj = getDataForCmd(cmd, tokens);
 
-			// Transmit request
-			if (cmd < 0 || dataObj == null) {
-				System.out.println("invalid command or argument.");
-				outLock.release();
-			} else {
-				if (dataObj.b > MAX_DATA) { System.out.println("warn: data too long"); }
-				msg.set_cmd(cmd);
-				msg.set_data(dataObj.a);
-				msg.set_length(dataObj.b);
-				try {
-					if (debug) { System.out.println("sending: " + msg.toString()); }
-					if (this.moteIF != null) {
-						moteIF.send(0, msg);
-					} else {
-						outLock.release();
-					}
-				} catch (IOException ex) {
-					System.out.println(ex.toString());
-				}
-			}
+			sendCmd(cmd, dataObj.a, dataObj.b);
 
 		} // while (bContinue)
 
