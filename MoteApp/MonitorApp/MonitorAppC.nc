@@ -18,9 +18,6 @@ implementation {
 	components LcdMenuC;
 	App.LcdMenu -> LcdMenuC;
 
-   components CC2420ActiveMessageC as RadioAM;
-	App.AMPacket -> RadioAM.AMPacket;
-	App.AMSend -> RadioAM.AMSend[AM_NODE_MSG];
-	App.Receive -> RadioAM.Receive[AM_NODE_MSG];
-	App.RadioControl -> RadioAM;
+	components NodeCommC;
+	App.NodeComm -> NodeCommC;
 }

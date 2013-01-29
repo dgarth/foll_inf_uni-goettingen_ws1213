@@ -11,48 +11,33 @@
 
 module Monitor {
     uses {
-       interface AMSend;
-       interface Receive;
-       interface AMPacket;
+       interface NodeComm;
        interface LcdMenu;
-       interface SplitControl as RadioControl;
        interface Boot;
     }
 }
 
 implementation {
-	node_msg_t cmd_msg, *report_msg;
-	message_t sPacket;
-
-	event void Boot.booted(void) {
-		call RadioControl.start();
+	node_msg_t cmd_msg[2];
+	uint8_t i = 0;
+	
+	event void Boot.booted(void) 
+	{
+		call NodeComm.init();
+		call LcdMenu.getUserCmd(&(cmd_msg[i]));
 	}
 	
-	event void AMSend.sendDone(message_t *msg, error_t error) {
-		call LcdMenu.getUserCmd(&cmd_msg);
+	event void NodeComm.dissReceive(const node_msg_t* cmd) 
+	{}
+	
+	event void NodeComm.collReceive(node_msg_t* msg) {
+		if(msg->cmd == CMD_REPORT)
+			call LcdMenu.showReport(msg);
 	}
 	
-	event message_t* Receive.receive(message_t *msg, void *payload, uint8_t len) {
-		report_msg = (node_msg_t*) payload;
-		if(report_msg->cmd == CMD_REPORT)
-			call LcdMenu.showReport(report_msg);
-		
-		return msg;
-	}
-	
-	event void LcdMenu.cmd_msg_ready(node_msg_t *cmd) {
-		node_msg_t *pmsg;
-		pmsg = call AMSend.getPayload(&sPacket, sizeof(node_msg_t));
-		
-		memcpy(pmsg, cmd, sizeof(node_msg_t));
-		
-		call AMSend.send(AM_BROADCAST_ADDR, &sPacket, sizeof(node_msg_t));	
-	}
-	
-	event void RadioControl.startDone(error_t error) {
-		call LcdMenu.getUserCmd(&cmd_msg);
-	}
-	
-	event void RadioControl.stopDone(error_t error) {
+	event void LcdMenu.cmd_msg_ready(node_msg_t* cmd) {
+		call NodeComm.dissSend(cmd);
+		i = (i+1)%2;
+		call LcdMenu.getUserCmd(&(cmd_msg[i]));
 	}
 }
