@@ -2,14 +2,13 @@ import java.util.*;
 
 public class Pack
 {
-    public static short[] pack(String fmt, long... values)
+    public static void pack(short[] buf, String fmt, long... values)
     {
-        short buf[] = new short[neededBytes(fmt)];
         int totalsz = 0;
 
         if (fmt.indexOf("L") != -1) {
             System.err.println("L is not supported!");
-            return null;
+            return;
         }
 
         for (int i = 0, ibuf = 0; i < fmt.length(); i++) {
@@ -62,11 +61,9 @@ public class Pack
             bufferPut(buf, val, totalsz, sz);
             totalsz += sz;
         }
-
-        return Arrays.copyOf(buf, totalsz);
     }
 
-    public static long[] unpack(String fmt, short[] buf)
+    public static long[] unpack(short[] buf, String fmt)
     {
         if (fmt.indexOf("L") != -1) {
             System.err.println("L is not supported!");
