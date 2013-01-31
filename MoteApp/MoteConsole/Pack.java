@@ -11,7 +11,7 @@ public class Pack
             return 0;
         }
 
-        for (int i = 0, ibuf = 0; i < fmt.length(); i++) {
+        for (int i = 0, ivals = 0; i < fmt.length(); i++) {
             long val = 0;
             int sz = 0;
 
@@ -26,40 +26,41 @@ public class Pack
                     break;
 
                 case 'b':
-                    val = (byte) values[ibuf];
+                    val = (byte) values[ivals];
                     sz = 1;
                     break;
                 case 'B':
-                    val = (short) promote(values[ibuf], Byte.MAX_VALUE);
+                    val = (short) promote(values[ivals], Byte.MAX_VALUE);
                     sz = 1;
                     break;
 
                 case 'h':
-                    val = (short) values[ibuf];
+                    val = (short) values[ivals];
                     sz = 2;
                     break;
                 case 'H':
-                    val = (int) promote(values[ibuf], Short.MAX_VALUE);
+                    val = (int) promote(values[ivals], Short.MAX_VALUE);
                     sz = 2;
                     break;
 
                 case 'i':
-                    val = (int) values[ibuf];
+                    val = (int) values[ivals];
                     sz = 4;
                     break;
                 case 'I':
-                    val = promote(values[ibuf], Integer.MAX_VALUE);
+                    val = promote(values[ivals], Integer.MAX_VALUE);
                     sz = 4;
                     break;
 
                 case 'l':
                 case 'L':
-                    val = values[ibuf];
+                    val = values[ivals];
                     sz = 8;
                     break;
             }
             bufferPut(buf, val, totalsz, sz);
             totalsz += sz;
+            ivals += 1;
         }
 
         return totalsz;
@@ -83,24 +84,42 @@ public class Pack
                 continue;
             }
 
-            switch (Character.toUpperCase(fmt.charAt(i))) {
+            switch (fmt.charAt(i)) {
+                case 'b':
+                    sz = 1;
+                    vals[ivals] = ((byte)bufferGet(buf, ibuf, sz));
+                    break;
                 case 'B':
                     sz = 1;
+                    vals[ivals] = bufferGet(buf, ibuf, sz);
+                    break;
+
+                case 'h':
+                    sz = 2;
+                    vals[ivals] = ((short)bufferGet(buf, ibuf, sz));
                     break;
                 case 'H':
                     sz = 2;
+                    vals[ivals] = bufferGet(buf, ibuf, sz);
+                    break;
+
+                case 'i':
+                    sz = 4;
+                    vals[ivals] = ((int)bufferGet(buf, ibuf, sz));
                     break;
                 case 'I':
                     sz = 4;
+                    vals[ivals] = bufferGet(buf, ibuf, sz);
                     break;
+
                 case 'L':
                     sz = 8;
+                    vals[ivals] = bufferGet(buf, ibuf, sz);
                     break;
             }
 
-            vals[ivals] = bufferGet(buf, ibuf, sz);
-            ivals += 1;
             ibuf += sz;
+            ivals += 1;
         }
 
         return vals;
