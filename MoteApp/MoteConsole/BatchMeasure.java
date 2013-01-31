@@ -4,12 +4,12 @@ import java.util.*;
 public class BatchMeasure
 {
 
-    private Queue<short[]> commands;
-    private short lineno;
+    private Queue<long[]> commands;
+    private long lineno;
 
     public BatchMeasure()
     {
-        commands = new LinkedList<short[]>();
+        commands = new LinkedList<long[]>();
         lineno = 0;
     }
 
@@ -40,11 +40,11 @@ public class BatchMeasure
                     continue;
                 }
 
-                short cmd[] = new short[4];
-                cmd[0] = Short.parseShort(args[0]);
-                cmd[1] = Short.parseShort(args[1]);
+                long cmd[] = new long[4];
+                cmd[0] = Long.parseLong(args[0]);
+                cmd[1] = Long.parseLong(args[1]);
                 cmd[2] = this.lineno++;
-                cmd[3] = Short.parseShort(args[2]);
+                cmd[3] = Long.parseLong(args[2]);
                 this.commands.add(cmd);
             }
         }
@@ -60,7 +60,7 @@ public class BatchMeasure
     }
 
     /* pop the next values from the queue */
-    public short[] next()
+    public long[] next()
     {
         try {
             return this.commands.remove();
