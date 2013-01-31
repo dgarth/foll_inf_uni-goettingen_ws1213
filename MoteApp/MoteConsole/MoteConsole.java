@@ -17,8 +17,15 @@ public class MoteConsole implements MessageListener {
     private NodeMsg nodeMsgObj; // gesendetes/empfangenes Paket
     boolean moreData; // aktuelles Paket ist unvollständig
     Semaphore outLock; // Synchronisation der Ausgabe
+
     private PrintStream logFile;
     private String logPath;
+    private enum LogFormat {
+        PLAIN,
+        CSV
+    }
+    private LogFormat logFmt = LogFormat.PLAIN;
+
     private BatchMeasure batch;
 
 
@@ -45,11 +52,19 @@ public class MoteConsole implements MessageListener {
     public static void main(String[] args) throws Exception {
         PhoenixSource ps;
         MoteIF mif = null;
-        int commParam = Arrays.asList(args).indexOf("-comm");
-        int dbgParam = Arrays.asList(args).indexOf("-debug");
+
+        List<String> argList = Arrays.asList(args);
+
+        int commParam = argList.indexOf("-comm");
+        int logFileParam = (argList.indexOf("-log"));
 
         if (commParam > -1) {
-            ps = BuildSource.makePhoenix(args[commParam + 1], PrintStreamMessenger.err);
+            String comm = args[commParam + 1];
+
+            if (!comm.startsWith("serial@")) {
+                comm = "serial@" + comm + ":telosb";
+            }
+            ps = BuildSource.makePhoenix(comm, PrintStreamMessenger.err);
             mif = new MoteIF(ps);
         } else {
             System.out.println("No device specified. Using local mode.");
@@ -57,9 +72,17 @@ public class MoteConsole implements MessageListener {
 
         MoteConsole mc = new MoteConsole(mif);
 
-        if (dbgParam > -1) {
+        if (argList.indexOf("-debug") > -1) {
             mc.debug = true;
             System.out.println("Debug mode enabled.");
+        }
+
+        if (argList.indexOf("-csv") != -1) {
+            mc.logFmt = LogFormat.CSV;
+        }
+
+        if (logFileParam != -1) {
+            mc.setLogfile(args[logFileParam + 1]);
         }
 
         // command loop
@@ -128,6 +151,17 @@ public class MoteConsole implements MessageListener {
 
                 if ("print".startsWith(tokens[1])) {
                     printLogfile(tokens.length == 3 ? tokens[2] : null);
+                }
+
+                if ("fmt".startsWith(tokens[1])) {
+                    if (logFmt == LogFormat.CSV) {
+                        logFmt = LogFormat.PLAIN;
+                        System.out.println("logging in PLAIN");
+                    }
+                    else {
+                        logFmt = LogFormat.CSV;
+                        System.out.println("logging in CSV");
+                    }
                 }
             }
 
@@ -292,6 +326,7 @@ public class MoteConsole implements MessageListener {
         ps.println("  help");
         ps.println("  log set <file>/none");
         ps.println("  log print [last n lines]");
+        ps.println("  log fmt");
         ps.println();
         ps.println("Commands can be abbreviated");
         ps.println("e.g. \"le t\" for \"led toggle\"");
@@ -520,10 +555,14 @@ public class MoteConsole implements MessageListener {
 
             case MoteCommands.CMD_REPORT:
                 long res[] = Pack.unpack(data, "BBHHb");
-                String fmt = String.format(
-                        "Measure #%d from set %d [%d --> %d], RSSI = %d",
-                        res[3], res[2], res[0], res[1], res[4]);
-                logMsgln(fmt);
+                String fmt;
+                if (this.logFmt == LogFormat.CSV) {
+                    fmt = "%3$d,%4$d,%2$d,%1$d,%5$d";
+                }
+                else {
+                    fmt = "Measure #%4$d from set %3$d [%1$d --> %2$d], RSSI = %5$d";
+                }
+                logMsgln(String.format(fmt, res[0], res[1], res[2], res[3], res[4]));
                 break;
 
             case MoteCommands.DEBUG_OUTPUT:
