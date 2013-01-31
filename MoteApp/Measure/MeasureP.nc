@@ -78,7 +78,6 @@ implementation
             case EALREADY:
                 /* radio already started -> good! */
                 radio_started = TRUE;
-                signal Measure.setupDone(SUCCESS);
                 break;
 
             case SUCCESS:
@@ -88,7 +87,7 @@ implementation
             case EBUSY:
             case FAIL:
                 /* can't start radio -> bad */
-                signal Measure.setupDone(FAIL);
+                radio_started = FALSE;
                 break;
         }
     }
@@ -180,7 +179,6 @@ implementation
         if (err == SUCCESS) {
             radio_started = TRUE;
         }
-        signal Measure.setupDone(err);
     }
 
     event void RadioControl.stopDone(error_t err)

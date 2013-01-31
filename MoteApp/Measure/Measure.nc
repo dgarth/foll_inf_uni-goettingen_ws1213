@@ -14,13 +14,6 @@ interface Measure
     command void setup(struct measure_options opt);
 
     /**
-     * Signalled when setup was completed.
-     *
-     * @param <b>error</b> SUCCESS or FAIL
-     */
-    event void setupDone(error_t error);
-
-    /**
      * Start test series with current configuration.
      *
      * @return

@@ -11,13 +11,12 @@ module MeasureMoteC
         interface Boot;
         interface NodeComm;
         interface Measure;
-		interface NodeTools;
+        interface NodeTools;
     }
 }
 
 implementation
 {
-
     uint16_t counter, current_series;
 
     uint8_t partner;
@@ -62,7 +61,7 @@ implementation
         if (id1 != TOS_NODE_ID && id2 != TOS_NODE_ID) {
             return;
         }
-		
+
         /* handle command */
         if (cmd->cmd == CMD_NEWMS) {
             struct measure_options opt;
@@ -75,7 +74,7 @@ implementation
         else if (cmd->cmd == CMD_STARTMS) {
             if (setup_done) {
                 call Measure.start();
-				call NodeTools.setLed(LED_BLUE, TRUE);
+                call NodeTools.setLed(LED_BLUE, TRUE);
             }
         }
         else if (cmd->cmd == CMD_STOPMS) {
@@ -92,22 +91,10 @@ implementation
      * Measure *
      *---------*/
 
-    event void Measure.setupDone(error_t error)
-    {
-        if (error == SUCCESS) {
-            setup_done = TRUE;
-			call NodeTools.setLed(LED_GREEN, TRUE);
-        }
-        else {
-            setup_done = FALSE;
-			call NodeTools.setLed(LED_GREEN, FALSE);
-        }
-    }
-
     event void Measure.received(int8_t rssi)
     {
-		node_msg_t cmd;
-		call NodeTools.flashLed(LED_RED, 1);        
+        node_msg_t cmd;
+        call NodeTools.flashLed(LED_RED, 1);
 
         cmd.cmd = CMD_REPORT;
         cmd.length =
@@ -120,11 +107,17 @@ implementation
 
     event void Measure.stopped(void)
     {
-		call NodeTools.setLed(LED_BLUE, FALSE);
+        call NodeTools.setLed(LED_BLUE, FALSE);
         current_series = 0;
         counter = 0;
     }
-	
-	event void NodeTools.onSerialCommand(node_msg_t* cmd) {
-	}
+
+
+    /*-----------*
+     * NodeTools *
+     *-----------*/
+
+    event void NodeTools.onSerialCommand(node_msg_t* cmd)
+    {
+    }
 }
