@@ -440,7 +440,13 @@ public class MoteConsole implements MessageListener {
         long[] d = new long[data.length];
 
         for (int i = 0; i < data.length; i++) {
-            d[i] = Long.parseLong(data[i]);
+            try {
+                d[i] = Long.parseLong(data[i]);
+            }
+            catch (NumberFormatException e) {
+                System.out.println("invalid argument: \"" + data[i] + "\" is not a number");
+                return null;
+            }
         }
 
         return makeMsg(cmd, d);
