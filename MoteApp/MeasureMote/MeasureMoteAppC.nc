@@ -17,4 +17,7 @@ implementation
 
     components MeasureC;
     App.Measure -> MeasureC;
+	
+	components NodeToolsC;
+	App.NodeTools -> NodeToolsC;
 }
