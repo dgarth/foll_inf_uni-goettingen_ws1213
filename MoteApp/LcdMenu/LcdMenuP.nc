@@ -127,7 +127,7 @@ implementation {
 	/*Einen Messreport aus einer node_msg_t über den LCD anzeigen */
 	command error_t LcdMenu.showReport(const node_msg_t *report)
 	{
-		uint8_t rssi;
+		int8_t rssi;
 		uint16_t series_nr, packet_nr;
 		
 		r = TRUE;
@@ -139,7 +139,7 @@ implementation {
 		memset(linebuf1, ' ', 16);
 		memset(linebuf2, ' ', 16);
 		
-		unpack(rep_msg->data, "BBHHB",
+		unpack(rep_msg->data, "BBHHb",
 				&id1,
 				&id2,
 				&series_nr,
@@ -148,7 +148,7 @@ implementation {
 			  );
 		
 		snprintf(linebuf1, 16, "N1:%u N2:%u M:%u", id1, id2, series_nr);
-		snprintf(linebuf2, 16, "P:%u R:%u", packet_nr, rssi);
+		snprintf(linebuf2, 16, "P:%u R:%d", packet_nr, rssi);
 		
 		//LCD anschalten
 		call LcdControl.enable();
