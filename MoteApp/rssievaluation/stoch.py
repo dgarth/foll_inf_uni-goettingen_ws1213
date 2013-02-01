@@ -59,9 +59,9 @@ def empiricaldistfunc(data, k):
 def coefficientofvariation(data):
     return standarddeviation(data)/mean(data)
     
-def quantilecoef(data):
+def quartilecoef(data):
     m = median(data)
-    return ((quantile(data, 0.75) - m) - (m - quantile(data, 0.25)))/interquartilerange(data)
+    return ((quantile(data, 0.75) - m) - (m - quantile(data, 0.25)))/float(interquartilerange(data))
 
     
 # --------------------------------- Tests -------------------------------------    
@@ -118,7 +118,7 @@ if __name__ == "__main__":
         print quant1, "Quantil:", quantile(l, quant1)
         print quant2, "Quantil:", quantile(l, quant2)
         print "IQR:", interquartilerange(l)
-        print "Quartilskoeffizient der Schiefe:", quantilecoef(l)
+        print "Quartilskoeffizient der Schiefe:", quartilecoef(l)
         print "Groesste normale Beobachtung:", biggestnormal(l)
         print "Kleinste normale Beobachtung:", smallestnormal(l)
         print "Varianz:", variance(l)
