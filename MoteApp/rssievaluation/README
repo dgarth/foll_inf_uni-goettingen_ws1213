@@ -1,0 +1,4 @@
+Benutzung:
+python printdata.py FILENAME
+
+Gibt eine Auswertung aller Messreihen in der CSV raus.

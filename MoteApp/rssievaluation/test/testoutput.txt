@@ -1,0 +1,115 @@
+Series 0
+data:
+[30, 11, -27, -12, 24, -33, 48, 44]
+sorted:
+[-33, -27, -12, 11, 24, 30, 44, 48]
+#values: 8
+minimum: -33
+maximum: 48
+range: 81
+sum: 85
+mean: 10.625
+0.2 trimmed mean: 11.6666666667
+median: 17.5
+0.75 quantile: 37.0
+0.25 quantile: -19.5
+IQR: 56.5
+quantile coefficient: -0.309734513274
+biggest normal value: 48
+smallest normal value: -33
+variance: 985.125
+standard deviation: 31.3867010054
+coefficient of variation: 2.95404244756
+
+Series 1
+data:
+[-12, -30, -10, 36, 32, -42, 44, 12, 15, -15, -27, 47]
+sorted:
+[-42, -30, -27, -15, -12, -10, 12, 15, 32, 36, 44, 47]
+#values: 12
+minimum: -42
+maximum: 47
+range: 89
+sum: 50
+mean: 4.16666666667
+0.2 trimmed mean: 3.875
+median: 1.0
+0.75 quantile: 34.0
+0.25 quantile: -21.0
+IQR: 55.0
+quantile coefficient: 0.2
+biggest normal value: 47
+smallest normal value: -42
+variance: 953.424242424
+standard deviation: 30.8775685964
+coefficient of variation: 7.41061646313
+
+Series 2
+data:
+[-26, 29, -38, -5, -34, -11]
+sorted:
+[-38, -34, -26, -11, -5, 29]
+#values: 6
+minimum: -38
+maximum: 29
+range: 67
+sum: -85
+mean: -14.1666666667
+0.2 trimmed mean: -19.0
+median: -18.5
+0.75 quantile: -5
+0.25 quantile: -34
+IQR: 29
+quantile coefficient: -0.0689655172414
+biggest normal value: 29
+smallest normal value: -38
+variance: 611.766666667
+standard deviation: 24.7339173336
+coefficient of variation: -1.74592357649
+
+Series 3
+data:
+[18, -47, 4, -22, 30, 36, 40, 4]
+sorted:
+[-47, -22, 4, 4, 18, 30, 36, 40]
+#values: 8
+minimum: -47
+maximum: 40
+range: 87
+sum: 63
+mean: 7.875
+0.2 trimmed mean: 11.6666666667
+median: 11.0
+0.75 quantile: 33.0
+0.25 quantile: -9.0
+IQR: 42.0
+quantile coefficient: 0.047619047619
+biggest normal value: 40
+smallest normal value: -47
+variance: 906.982142857
+standard deviation: 30.1161442229
+coefficient of variation: 3.82427228228
+
+Series 4
+data:
+[16, 11, -36, -49, 1, 10, -2, -33, -33]
+sorted:
+[-49, -36, -33, -33, -2, 1, 10, 11, 16]
+#values: 9
+minimum: -49
+maximum: 16
+range: 65
+sum: -115
+mean: -12.7777777778
+0.2 trimmed mean: -11.7142857143
+median: -2
+0.75 quantile: 10
+0.25 quantile: -33
+IQR: 43
+quantile coefficient: -1
+biggest normal value: 16
+smallest normal value: -49
+variance: 610.944444444
+standard deviation: 24.7172903945
+coefficient of variation: -1.93439663957
+
