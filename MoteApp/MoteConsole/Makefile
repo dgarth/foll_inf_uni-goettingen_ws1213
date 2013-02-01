@@ -10,7 +10,6 @@ COMMANDS =          \
 	CMD_NEWMS       \
 	CMD_STARTMS     \
 	CMD_STOPMS      \
-	CMD_CLEARMS     \
 	CMD_REPORT      \
 	DEBUG_OUTPUT    \
 

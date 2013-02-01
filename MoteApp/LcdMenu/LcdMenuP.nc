@@ -70,9 +70,6 @@ implementation {
 			case CMD_STOPMS:
 				sprintf(linebuf1, "Cmd: CMD_STOPMS");
 			break;
-			case CMD_CLEARMS:
-				sprintf(linebuf1, "Cmd: CMD_CLEARMS");
-			break;
 		}
 	}
 	
@@ -180,7 +177,7 @@ implementation {
 			switch(phase) {
 				case 0:
 					cmdType++;
-					if(cmdType > CMD_CLEARMS)
+					if(cmdType > CMD_STOPMS)
 						cmdType = CMD_NEWMS;
 					getCmdType();
 				break;

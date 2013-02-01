@@ -243,9 +243,6 @@ public class MoteConsole implements MessageListener {
                 else if (Pattern.matches("stop?", tokens[1])) {
                     cmd = MoteCommands.CMD_STOPMS;
                 }
-                else if ("clear".startsWith(tokens[1])) {
-                    cmd = MoteCommands.CMD_CLEARMS;
-                }
                 else {
                     System.out.println("invalid ms command");
                 }
@@ -446,7 +443,6 @@ public class MoteConsole implements MessageListener {
 
             case MoteCommands.CMD_STARTMS:
             case MoteCommands.CMD_STOPMS:
-            case MoteCommands.CMD_CLEARMS:
                 format = "BB";
                 break;
 

@@ -67,11 +67,6 @@ enum commands {
        data[0] = ID1 (sending node), uint8
        data[1] = ID2 (receiving node), uint8 */
 
-    CMD_CLEARMS,
-    /* Lose a measure parnership initiated with CMD_NEWMS. Parameters:
-       data[0] = ID1 (sending node), uint8
-       data[1] = ID2 (receiving node), uint8 */
-
     CMD_REPORT,
     /* Report a measure result to the sink. Parameters:
        data[0] = ID (reporting node ID), uint8
