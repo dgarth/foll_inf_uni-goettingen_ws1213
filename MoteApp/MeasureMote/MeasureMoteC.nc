@@ -20,7 +20,7 @@ implementation
     uint16_t counter, current_series;
 
     uint8_t partner;
-    bool setup_done;
+    bool setup_done = FALSE;
 
     /*******************
      * USED INTERFACES *
@@ -70,6 +70,8 @@ implementation
             partner = opt.partner = (id1 == TOS_NODE_ID) ? id2 : id1;
 
             call Measure.setup(opt);
+            setup_done = TRUE;
+            NodeTools.setLed(LED_GREEN, TRUE)
         }
         else if (cmd->cmd == CMD_STARTMS) {
             if (setup_done) {

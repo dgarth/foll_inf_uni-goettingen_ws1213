@@ -32,7 +32,8 @@ if len(sys.argv) <= 1:
 else:
     data = csvparser.getdictfromcsv(sys.argv[1])
 
-for i in range(256):
+for i in range(min(csvparser.listfromkeyvalues(data, 'series')),
+               max(csvparser.listfromkeyvalues(data, 'series'))+1):
     tmp = csvparser.listfromkeyvalues(data, 'rssi', series=i)
     if tmp:
         print "Series", i
