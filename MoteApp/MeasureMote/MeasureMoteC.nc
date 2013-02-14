@@ -71,7 +71,7 @@ implementation
 
             call Measure.setup(opt);
             setup_done = TRUE;
-            NodeTools.setLed(LED_GREEN, TRUE)
+            call NodeTools.setLed(LED_GREEN, TRUE);
         }
         else if (cmd->cmd == CMD_STARTMS) {
             if (setup_done) {
@@ -110,6 +110,8 @@ implementation
     event void Measure.stopped(void)
     {
         call NodeTools.setLed(LED_BLUE, FALSE);
+		call NodeTools.setLed(LED_GREEN, FALSE);
+		setup_done = FALSE;
         current_series = 0;
         counter = 0;
     }
