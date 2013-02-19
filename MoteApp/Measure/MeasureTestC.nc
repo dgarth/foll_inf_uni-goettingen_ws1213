@@ -49,6 +49,10 @@ implementation
 
         call NodeTools.enqueueMsg(&resp);
     }
+    
+    event void Measure.send(uint16_t counter)
+    {
+    }
 
     event void Measure.stopped(void)
     {

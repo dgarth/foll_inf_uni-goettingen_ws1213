@@ -77,6 +77,7 @@ implementation
             if (setup_done) {
                 call Measure.start();
                 call NodeTools.setLed(LED_BLUE, TRUE);
+                call NodeTools.setLed(LED_GREEN, FALSE);
             }
         }
         else if (cmd->cmd == CMD_STOPMS) {
@@ -95,14 +96,15 @@ implementation
 
     event void Measure.received(int8_t rssi)
     {
-        node_msg_t cmd;
-        call NodeTools.flashLed(LED_RED, 1);
+        node_msg_t cmd;        
 
         cmd.cmd = CMD_REPORT;
         cmd.length =
             pack(cmd.data, "BBHHb", TOS_NODE_ID, partner, current_series,
                  counter, rssi);
+                 
         call NodeComm.collSend(&cmd);
+        call NodeTools.flashLed(LED_RED, 1);
 
         counter++;
     }
@@ -110,12 +112,15 @@ implementation
     event void Measure.stopped(void)
     {
         call NodeTools.setLed(LED_BLUE, FALSE);
-		call NodeTools.setLed(LED_GREEN, FALSE);
 		setup_done = FALSE;
         current_series = 0;
         counter = 0;
     }
-
+    
+    event void Measure.sent(uint16_t count)
+    {
+        call NodeTools.flashLed(LED_GREEN, 1);
+    }
 
     /*-----------*
      * NodeTools *

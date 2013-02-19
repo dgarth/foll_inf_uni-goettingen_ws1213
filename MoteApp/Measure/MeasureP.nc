@@ -142,6 +142,7 @@ implementation
     event void Send.sendDone(message_t *msg, error_t error)
     {
         if (msg == &pkt) {
+            signal Measure.sent(counter);
             radio_busy = FALSE;
         }
     }
