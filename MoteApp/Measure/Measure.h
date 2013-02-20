@@ -6,7 +6,7 @@
 enum
 {
     RSSI_OFFSET = -45,
-    MEASURE_INTERVAL = 1000,
+    MEASURE_INTERVAL = 100,
 };
 
 struct measure_options
