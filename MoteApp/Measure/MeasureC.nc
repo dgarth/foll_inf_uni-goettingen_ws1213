@@ -22,6 +22,9 @@ implementation
     M.Send -> AMSenderC;
     M.Receive -> AMReceiverC;
 
+    components RandomC;
+    M.Random -> RandomC;
+
     /* for sending "dummy" packets to the partner mote in intervals */
     components new TimerMilliC() as Timer;
     M.Timer -> Timer;
