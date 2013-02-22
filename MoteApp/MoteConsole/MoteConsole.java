@@ -173,7 +173,9 @@ public class MoteConsole implements MessageListener {
                     System.out.println("usage: echo <node>");
                     continue;
                 }
-                sendMsg(MoteCommands.CMD_ECHO, tokens[1]);
+				String[] targets = new String[tokens.length - 1];
+				System.arraycopy(tokens, 1, targets, 0, tokens.length - 1);
+                sendMsg(MoteCommands.CMD_ECHO, targets);
             }
 
             /*------*
@@ -433,7 +435,7 @@ public class MoteConsole implements MessageListener {
 
         switch (cmd) {
             case MoteCommands.CMD_ECHO:
-                format = "B";
+				format = new String(new char[data.length]).replace("\0", "B");
                 break;
 
             case MoteCommands.CMD_LEDON:
@@ -464,6 +466,7 @@ public class MoteConsole implements MessageListener {
         msg.set_data(buf);
         msg.set_length((short) length);
         msg.set_moreData((short) 0);
+
         return msg;
     }
 

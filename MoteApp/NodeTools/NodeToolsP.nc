@@ -218,6 +218,7 @@ implementation {
 		/* Event signalisieren, falls das empfangene Paket weiterverteilt
 		 * werden muss ("signal dissemination") */
 		bool sigDis = FALSE;
+		bool responded = FALSE;
 
 		if (len != sizeof(node_msg_t)) {
 			return bufPtr;
@@ -232,22 +233,23 @@ implementation {
 		switch (pmsg->cmd) {
 			case CMD_ECHO:
 				// Testen, ob unsere ID im Paket enthalten ist
-				for (i = 0; i < pmsg->length; i++) {
+				// Direkt antworten, falls ja.
+				for (i = 0; i < pmsg->length && !responded; i++) {
 					if (myID == pmsg->data[i]) {
 						rmsg.cmd = CMD_ECHO;
 						rmsg.data[0] = myID;
 						rmsg.length = 1;
 						call NodeTools.enqueueMsg(&rmsg);
-						break;
+						responded = TRUE;
 					}
 				}
 
-				// Sollen noch weitere Nodes gepingt werden?
-				if (pmsg->length > 1) {
+				// Sollen weitere Nodes sollen gepingt werden?
+				// Oder war die einzige Nachricht nicht für uns?
+				if (pmsg->length > 1 || !responded) {
 					sigDis = TRUE;
 				}
 
-				call NodeTools.serialSendOK();
 				break;
 
 			case CMD_LEDON:
@@ -256,7 +258,6 @@ implementation {
 					call NodeTools.setLed(led, TRUE);
 				} else { sigDis = TRUE; }
 
-				call NodeTools.serialSendOK();
 				break;
 
 			case CMD_LEDOFF:
@@ -265,7 +266,6 @@ implementation {
 					call NodeTools.setLed(led, FALSE);
 				} else { sigDis = TRUE; }
 
-				call NodeTools.serialSendOK();
 				break;
 
 			case CMD_LEDTOGGLE:
@@ -278,7 +278,6 @@ implementation {
 					}
 				} else { sigDis = TRUE; }
 
-				call NodeTools.serialSendOK();
 				break;
 
 			case CMD_LEDBLINK:
@@ -287,11 +286,10 @@ implementation {
 					call NodeTools.flashLed(led, pmsg->data[2]);
 				} else { sigDis = TRUE; }
 
-				call NodeTools.serialSendOK();
 				break;
 
 			default:
-				signal NodeTools.onSerialCommand(pmsg);
+				sigDis = TRUE;
 				break;
 
 		}
@@ -302,6 +300,7 @@ implementation {
 			signal NodeTools.onSerialCommand(pmsg);
 		}
 
+		call NodeTools.serialSendOK();
 		return bufPtr;
 	}
 
@@ -318,6 +317,7 @@ implementation {
 		/* Nachricht direkt absenden, falls nicht gerade gesendet wird */
 		if (!locked) {
 			post serialSendMsg();
+			outstandingOK = FALSE;
 		}
 	}
 
