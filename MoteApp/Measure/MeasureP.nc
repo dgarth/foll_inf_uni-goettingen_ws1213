@@ -9,6 +9,7 @@ module MeasureP
     uses
     {
         interface Timer<TMilli>;
+        interface Random;
 
         interface SplitControl as RadioControl;
         interface AMSend as Send;
@@ -94,12 +95,14 @@ implementation
 
     command error_t Measure.start(void)
     {
+        uint32_t o;
         if (!radio_started || running) {
             return FAIL;
         }
 
         running = TRUE;
-        call Timer.startPeriodic(MEASURE_INTERVAL);
+        o = call Random.rand16() % MEASURE_INTERVAL;
+        call Timer.startPeriodicAt(call Timer.getNow() + o, MEASURE_INTERVAL);
         return SUCCESS;
     }
 
