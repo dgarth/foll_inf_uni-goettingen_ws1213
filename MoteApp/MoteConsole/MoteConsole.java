@@ -24,7 +24,7 @@ public class MoteConsole implements MessageListener {
         PLAIN,
         CSV
     }
-    private LogFormat logFmt = LogFormat.PLAIN;
+    private LogFormat logFmt = LogFormat.CSV;
 
     private BatchMeasure batch;
 
@@ -79,6 +79,10 @@ public class MoteConsole implements MessageListener {
 
         if (argList.indexOf("-csv") != -1) {
             mc.logFmt = LogFormat.CSV;
+        }
+
+        if (argList.indexOf("-plain") != -1) {
+            mc.logFmt = LogFormat.PLAIN;
         }
 
         if (logFileParam != -1) {
