@@ -1,0 +1,3 @@
+messreihe 12 ist messpunkt 2 (wurde aus versehen uebersprungen)!
+
+bei klarem wetter: 1 grad, bewölkt, 70-80% luftfeuchtigkeit.
