@@ -149,15 +149,13 @@ public class MoteConsole implements MessageListener {
                     System.out.println("usage: log <command> [<arg>]");
                     continue;
                 }
-                if ("set".startsWith(tokens[1])) {
+                else if ("set".startsWith(tokens[1])) {
                     setLogfile(tokens.length >= 3 ? tokens[2] : null);
                 }
-
-                if ("print".startsWith(tokens[1])) {
+                else if ("print".startsWith(tokens[1])) {
                     printLogfile(tokens.length == 3 ? tokens[2] : null);
                 }
-
-                if ("fmt".startsWith(tokens[1])) {
+                else if ("fmt".startsWith(tokens[1])) {
                     if (logFmt == LogFormat.CSV) {
                         logFmt = LogFormat.PLAIN;
                         System.out.println("logging in PLAIN");
@@ -166,6 +164,9 @@ public class MoteConsole implements MessageListener {
                         logFmt = LogFormat.CSV;
                         System.out.println("logging in CSV");
                     }
+                }
+                else {
+                    System.out.println("invalid log command");
                 }
             }
 
