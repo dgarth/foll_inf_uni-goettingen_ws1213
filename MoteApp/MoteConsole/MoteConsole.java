@@ -28,6 +28,8 @@ public class MoteConsole implements MessageListener {
 
     private BatchMeasure batch;
 
+    private Map<Long, Long> receivedPackets;
+
 
     /*==================*
      * init & main loop *
@@ -43,6 +45,7 @@ public class MoteConsole implements MessageListener {
         this.logFile = null;
         this.logPath = null;
         this.batch = new BatchMeasure();
+        this.receivedPackets = new Hashtable<Long, Long>();
 
         if (moteIF != null) {
             this.moteIF.registerListener(this.nodeMsgObj, this);
@@ -129,6 +132,12 @@ public class MoteConsole implements MessageListener {
 
             // tokens.length ist immer > 0
             if (tokens[0].equals("")) {
+                if (!this.receivedPackets.isEmpty()) {
+                    System.out.println("Node | Rcvd");
+                    for (Long key : this.receivedPackets.keySet()) {
+                        System.out.printf("%4d | %5d\n", key, this.receivedPackets.get(key));
+                    }
+                }
                 continue;
             }
 
@@ -243,6 +252,7 @@ public class MoteConsole implements MessageListener {
 
                 if ("new".startsWith(tokens[1])) {
                     cmd = MoteCommands.CMD_NEWMS;
+                    this.receivedPackets.clear();
                 }
                 else if (Pattern.matches("sta(rt?)?", tokens[1])) {
                     cmd = MoteCommands.CMD_STARTMS;
@@ -559,6 +569,13 @@ public class MoteConsole implements MessageListener {
 
             case MoteCommands.CMD_REPORT:
                 long res[] = Pack.unpack(data, "BBHHb");
+
+                /* count packets received by this mote */
+                Long count = this.receivedPackets.get(data[0]);
+                if (count == null)
+                    count = 0L;
+                this.receivedPackets.put((long)data[0], count + 1);
+
                 String fmt;
                 if (this.logFmt == LogFormat.CSV) {
                     fmt = "%3$d,%4$d,%2$d,%1$d,%5$d";
