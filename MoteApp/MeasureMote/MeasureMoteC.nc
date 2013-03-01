@@ -17,8 +17,6 @@ module MeasureMoteC
 
 implementation
 {
-    uint16_t counter, current_series;
-
     uint8_t partner;
     bool setup_done = FALSE;
 
@@ -94,27 +92,23 @@ implementation
      * Measure *
      *---------*/
 
-    event void Measure.received(int8_t rssi)
+    event void Measure.received(uint16_t measure, uint16_t counter, int8_t rssi)
     {
         node_msg_t cmd;        
 
         cmd.cmd = CMD_REPORT;
         cmd.length =
-            pack(cmd.data, "BBHHb", TOS_NODE_ID, partner, current_series,
+            pack(cmd.data, "BBHHb", TOS_NODE_ID, partner, measure,
                  counter, rssi);
                  
         call NodeComm.collSend(&cmd);
         call NodeTools.flashLed(LED_RED, 1);
-
-        counter++;
     }
 
     event void Measure.stopped(void)
     {
         call NodeTools.setLed(LED_BLUE, FALSE);
 		setup_done = FALSE;
-        current_series = 0;
-        counter = 0;
     }
     
     event void Measure.sent(uint16_t count)

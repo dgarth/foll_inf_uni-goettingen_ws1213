@@ -122,17 +122,23 @@ implementation
 
     event void Timer.fired(void)
     {
+        nx_struct measure_msg *msg;
         if (radio_busy) {
             return;
         }
 
+        msg = call Send.getPayload(&pkt, sizeof *msg);
+
+        msg->measure = config.measure;
+        msg->counter = counter;
+
         /* send an empty dummy packet */
-        if (call Send.send(config.partner, &pkt, 0) == SUCCESS) {
+        if (call Send.send(config.partner, &pkt, sizeof *msg) == SUCCESS) {
             radio_busy = TRUE;
         }
 
         /* stop measuring if limit reached */
-        if (config.count && counter++ >= config.count) {
+        if (config.count && ++counter >= config.count) {
             post stop();
         }
     }
@@ -159,14 +165,15 @@ implementation
                                      uint8_t len)
     {
         int8_t rssi;
+        nx_struct measure_msg *p = payload;
 
         /* get sender node ID */
         am_addr_t source = call AMPacket.source(msg);
 
         /* is the message OK (a dummy packet from our partner)? */
-        if (len == 0 && source == config.partner) {
+        if (len == sizeof *p && source == config.partner) {
             rssi = call RssiPacket.getRssi(msg) + RSSI_OFFSET;
-            signal Measure.received(rssi);
+            signal Measure.received(p->measure, p->counter, rssi);
         }
         return msg;
     }
