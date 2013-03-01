@@ -454,7 +454,7 @@ public class MoteConsole implements MessageListener {
                 break;
 
             case MoteCommands.CMD_NEWMS:
-                format = "BBHH";
+                format = "BBHHH";
                 break;
 
             default:

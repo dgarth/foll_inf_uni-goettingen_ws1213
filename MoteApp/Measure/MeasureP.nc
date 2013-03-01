@@ -101,8 +101,8 @@ implementation
         }
 
         running = TRUE;
-        o = call Random.rand16() % MEASURE_INTERVAL;
-        call Timer.startPeriodicAt(call Timer.getNow() + o, MEASURE_INTERVAL);
+        o = call Random.rand16() % config.interval;
+        call Timer.startPeriodicAt(call Timer.getNow() + o, config.interval);
         return SUCCESS;
     }
 

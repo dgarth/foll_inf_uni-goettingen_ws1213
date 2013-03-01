@@ -54,7 +54,8 @@ enum commands {
        data[1] = ID2 (receiving node), uint8
        data[2]...data[3] = Messreihe, uint16
        data[4]...data[5] = Anzahl Messpakete, uint16
-       -> format "BBHH"
+       data[6]...data[7] = Intervall, uint16
+       -> format "BBHHH"
      */
 
     CMD_STARTMS,

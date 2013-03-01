@@ -66,7 +66,7 @@ implementation
         if (cmd->cmd == CMD_NEWMS) {
             struct measure_options opt;
 
-            unpack(cmd->data, "__HH", &current_series, &opt.count);
+            unpack(cmd->data, "__HHH", &opt.measure, &opt.count, &opt.interval);
             partner = opt.partner = (id1 == TOS_NODE_ID) ? id2 : id1;
 
             call Measure.setup(opt);
