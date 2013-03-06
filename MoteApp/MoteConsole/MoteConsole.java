@@ -30,6 +30,13 @@ public class MoteConsole implements MessageListener {
 
     private Map<Long, Long> receivedPackets;
 
+    /* settings to change with "cfg" */
+    private long mote1 = 1,
+              mote2 = 2,
+              set = 1,
+              count = 1200,
+              interval = 50;
+
 
     /*==================*
      * init & main loop *
@@ -44,7 +51,6 @@ public class MoteConsole implements MessageListener {
         this.outLock = new Semaphore(1);
         this.logFile = null;
         this.logPath = null;
-        this.batch = new BatchMeasure();
         this.receivedPackets = new Hashtable<Long, Long>();
 
         if (moteIF != null) {
@@ -187,8 +193,8 @@ public class MoteConsole implements MessageListener {
                     System.out.println("usage: echo <node>");
                     continue;
                 }
-				String[] targets = new String[tokens.length - 1];
-				System.arraycopy(tokens, 1, targets, 0, tokens.length - 1);
+                String[] targets = new String[tokens.length - 1];
+                System.arraycopy(tokens, 1, targets, 0, tokens.length - 1);
                 sendMsg(MoteCommands.CMD_ECHO, targets);
             }
 
@@ -245,8 +251,8 @@ public class MoteConsole implements MessageListener {
                 int cmd = -1;
                 String[] args;
 
-                if (tokens.length < 4) {
-                    System.out.println("usage: ms <command> <node1> <node2> [<args ...>]");
+                if (tokens.length < 2) {
+                    System.out.println("usage: ms <command> [<node1> <node2>] [<args ...>]");
                     continue;
                 }
 
@@ -260,6 +266,16 @@ public class MoteConsole implements MessageListener {
                 else if (Pattern.matches("stop?", tokens[1])) {
                     cmd = MoteCommands.CMD_STOPMS;
                 }
+                else if ("next".startsWith(tokens[1]))
+                {
+                    this.receivedPackets.clear();
+                    sendMsg(makeMsg(MoteCommands.CMD_NEWMS, this.mote1, this.mote2,
+                                this.set, this.count, this.interval));
+                    this.sleep(500);
+                    sendMsg(makeMsg(MoteCommands.CMD_STARTMS, this.mote1, this.mote2));
+                    this.set += 1;
+                }
+
                 else {
                     System.out.println("invalid ms command");
                 }
@@ -269,49 +285,74 @@ public class MoteConsole implements MessageListener {
                     sendMsg(cmd, args);
                 }
             }
-
-            /*-------*
-             * batch *
-             *-------*/
-            else if ("batch".startsWith(tokens[0])) {
-                if (tokens.length < 2) {
-                    System.out.println("usage: batch <command> [<args>]");
+            else if ("cfg".startsWith(tokens[0])) {
+                if (tokens.length == 1) {
+                    System.out.printf("mote1:     %d\n", this.mote1);
+                    System.out.printf("mote2:     %d\n", this.mote2);
+                    System.out.printf("set:       %d\n", this.set);
+                    System.out.printf("count:     %d\n", this.count);
+                    System.out.printf("interval:  %d\n", this.interval);
                     continue;
                 }
-
-                if ("load".startsWith(tokens[1])) {
-                    if (tokens.length < 3) {
-                        System.out.println("usage: batch load <file>");
-                        continue;
+                if ("motes".startsWith(tokens[1])) {
+                    if (tokens.length == 4) {
+                        try {
+                            this.mote1 = Long.parseLong(tokens[2]);
+                            this.mote2 = Long.parseLong(tokens[3]);
+                        }
+                        catch (NumberFormatException e) {
+                            System.out.println("invalid argument");
+                        }
                     }
-                    // load batch measure file
-                    batch.load(tokens[2]);
-                }
-
-                else if ("clear".startsWith(tokens[1])) {
-                    // remove all items from batch queue
-                    batch.clear();
-                }
-
-                else if ("next".startsWith(tokens[1])) {
-                    // send NEWMS and STARTMS with values from the next line
-                    long next[] = batch.next();
-                    if (next != null) {
-                        System.out.printf(
-                                "Starting measure %d with nodes %d and %d (%d packets)\n",
-                                next[2], next[0], next[1], next[3]);
-                        sendMsg(makeMsg(MoteCommands.CMD_NEWMS, next));
-                        try { Thread.sleep(500); } catch (InterruptedException e) { ; }
-                        sendMsg(makeMsg(MoteCommands.CMD_STARTMS, next));
-                    } else {
-                        System.out.println("Nothing to do");
+                    else {
+                        System.out.printf("mote1: %d\n", this.mote1);
+                        System.out.printf("mote2: %d\n", this.mote2);
                     }
-                }
 
+                }
+                else if ("set".startsWith(tokens[1])) {
+                    if (tokens.length == 3) {
+                        try {
+                            this.set = Long.parseLong(tokens[2]);
+                        }
+                        catch (NumberFormatException e) {
+                            System.out.println("invalid argument");
+                        }
+                    }
+                    else
+                        System.out.printf("set: %d\n", this.set);
+                }
+                else if ("count".startsWith(tokens[1])) {
+                    if (tokens.length == 3) {
+                        try {
+                            this.count = Long.parseLong(tokens[2]);
+                        }
+                        catch (NumberFormatException e) {
+                            System.out.println("invalid argument");
+                        }
+                    }
+                    else
+                        System.out.printf("count: %d\n", this.count);
+                }
+                else if ("interval".startsWith(tokens[1]))
+                {
+                    if (tokens.length == 3)
+                    {
+                        try { 
+                            this.interval = Long.parseLong(tokens[2]);
+                        }
+                        catch (NumberFormatException e) {
+                            System.out.println("invalid argument");
+                        }
+                    }
+                    else
+                        System.out.printf("interval: %d\n", this.interval);
+                }
                 else {
-                    System.out.println("invalid batch command");
+                    System.out.println("invalid cfg command");
                 }
             }
+
 
             else {
                 System.out.println("invalid command");
@@ -331,9 +372,12 @@ public class MoteConsole implements MessageListener {
         ps.println("  ms start ID1 ID2");
         ps.println("  ms stop ID1 ID2");
         ps.println("  ms clear ID1 ID2");
-        ps.println("  batch load FILE - load batch measures from FILE");
-        ps.println("  batch next      - start next batch measure");
-        ps.println("  batch clear     - clear all batch measures ");
+        ps.println("  ms next (uses settings set with the following commands, automatically increments \"set\")");
+        ps.println("  print current configuration");
+        ps.println("  cfg motes ID1 ID2");
+        ps.println("  cfg set <measure_set>");
+        ps.println("  cfg count <measure_count>");
+        ps.println("  cfg interval <milliseconds>");
         ps.println();
         ps.println("Local commands:");
         ps.println("  quit/exit");
@@ -450,7 +494,7 @@ public class MoteConsole implements MessageListener {
 
         switch (cmd) {
             case MoteCommands.CMD_ECHO:
-				format = new String(new char[data.length]).replace("\0", "B");
+                format = new String(new char[data.length]).replace("\0", "B");
                 break;
 
             case MoteCommands.CMD_LEDON:
@@ -626,6 +670,15 @@ public class MoteConsole implements MessageListener {
             logFile.println(m);
         } else {
             System.out.println(m);
+        }
+    }
+
+    private void sleep(long time) {
+        try {
+            Thread.sleep(500);
+        }
+        catch (InterruptedException e) {
+            ;
         }
     }
 }
