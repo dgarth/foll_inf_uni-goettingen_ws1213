@@ -571,7 +571,7 @@ public class MoteConsole implements MessageListener {
                 long res[] = Pack.unpack(data, "BBHHb");
 
                 /* count packets received by this mote */
-                Long count = this.receivedPackets.get(data[0]);
+                Long count = this.receivedPackets.get((long)data[0]);
                 if (count == null)
                     count = 0L;
                 this.receivedPackets.put((long)data[0], count + 1);
