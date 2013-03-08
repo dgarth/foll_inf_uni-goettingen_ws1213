@@ -95,6 +95,7 @@ implementation
     event void Measure.received(uint16_t measure, uint16_t counter, int8_t rssi)
     {
         node_msg_t cmd;        
+        static uint8_t received_count;
 
         cmd.cmd = CMD_REPORT;
         cmd.length =
@@ -102,7 +103,8 @@ implementation
                  counter, rssi);
                  
         call NodeComm.collSend(&cmd);
-        call NodeTools.flashLed(LED_RED, 1);
+        if (received_count++ % 0x10 == 0)
+            call NodeTools.flashLed(LED_RED, 1);
     }
 
     event void Measure.stopped(void)
@@ -113,7 +115,9 @@ implementation
     
     event void Measure.sent(uint16_t count)
     {
-        call NodeTools.flashLed(LED_GREEN, 1);
+        static uint8_t sent_count;
+        if (sent_count++ % 0x10 == 0)
+            call NodeTools.flashLed(LED_GREEN, 1);
     }
 
     /*-----------*
