@@ -271,7 +271,7 @@ public class MoteConsole implements MessageListener {
                     this.receivedPackets.clear();
                     sendMsg(makeMsg(MoteCommands.CMD_NEWMS, this.mote1, this.mote2,
                                 this.set, this.count, this.interval));
-                    this.sleep(500);
+                    this.sleep(5000);
                     sendMsg(makeMsg(MoteCommands.CMD_STARTMS, this.mote1, this.mote2));
                     this.set += 1;
                 }
