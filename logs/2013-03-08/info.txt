@@ -1,0 +1,4 @@
+reihenfolge OK,
+messpunkt 8 geschaetzt weil die markierung verschleppt wurde
+
+bedeckt, 4°C, leichter ostwind, ~85% LF 
