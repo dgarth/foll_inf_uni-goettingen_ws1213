@@ -26,7 +26,6 @@ public class MoteConsole implements MessageListener {
     }
     private LogFormat logFmt = LogFormat.CSV;
 
-    private BatchMeasure batch;
 
     private Map<Long, Long> receivedPackets;
 
@@ -675,7 +674,7 @@ public class MoteConsole implements MessageListener {
 
     private void sleep(long time) {
         try {
-            Thread.sleep(500);
+            Thread.sleep(time);
         }
         catch (InterruptedException e) {
             ;
