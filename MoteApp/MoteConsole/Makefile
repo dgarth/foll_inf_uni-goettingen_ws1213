@@ -11,9 +11,10 @@ COMMANDS =          \
 	CMD_STARTMS     \
 	CMD_STOPMS      \
 	CMD_REPORT      \
-	DEBUG_OUTPUT    \
+	DEBUG_OUTPUT
 
-%.class: %.java MoteCommands.java NodeMsg.java BatchMeasure.java
+
+%.class: %.java MoteCommands.java NodeMsg.java
 	javac $<
 
 MoteCommands.java: ../allnodes.h
@@ -21,6 +22,7 @@ MoteCommands.java: ../allnodes.h
 
 NodeMsg.java: ../allnodes.h
 	mig java -target=null -java-classname=$(basename $@ .java) $< node_msg -o $@
+
 
 clean:
 	rm -f NodeMsg.java MoteCommands.java *.class
