@@ -4,14 +4,15 @@ import csvparser
 
 # TODO: - ausgabe weiter aufdroeseln (zb nach nodes)?
 
-def printlistevaluation(l, trim=0.2, upperquant=0.75, lowerquant=0.25):
-    print "data:\n", l
-    print "sorted:\n", sorted(l)
+def printlistevaluation(l, trim=0.2, upperquant=0.75, lowerquant=0.25, verbose=False):
+    if verbose:
+        print "data:\n", l
+        print "sorted:\n", sorted(l)
+        print "sum:", stoch.sum(l)
     print "#values:", len(l)
     print "minimum:", min(l)
     print "maximum:", max(l)
     print "range:", stoch.datarange(l)
-    print "sum:", stoch.sum(l)
     print "mean:", stoch.mean(l)
     print trim, "trimmed mean:", stoch.trimmedmean(l, trim)
     print "median:", stoch.median(l)
@@ -25,28 +26,39 @@ def printlistevaluation(l, trim=0.2, upperquant=0.75, lowerquant=0.25):
     print "standard deviation:", stoch.standarddeviation(l)
     print "coefficient of variation:", stoch.coefficientofvariation(l)
 
-if len(sys.argv) <= 1:    
-    print "Please enter CSV file to be evaluated as command line option."
+v = False
+if "-v" in sys.argv:
+    sys.argv.remove("-v")
+    v = True
+
+p = False
+if "-p" in sys.argv:
+    sys.argv.remove("-p")
+    p = True
+
+if len(sys.argv) != 2:
+    print "Please enter exactly one CSV file to be evaluated."
     sys.exit(1)
-else:
-    data = csvparser.getdictfromcsv(sys.argv[1])
 
-try: 
-    import matplotlib.pyplot as mpl
-except ImportError:
-    print "Install matplotlib to display Boxplots."
-    doPlots = False
-else:
-    doPlots = True
-    fg = mpl.figure()
-    plots_data = []
+doPlots = False
+if p:
+    try:
+        import matplotlib.pyplot as mpl
+    except ImportError:
+        print "Install matplotlib to display Boxplots."    
+    else:
+        doPlots = True
+        fg = mpl.figure()
+        plots_data = []
 
+
+data = csvparser.getdictfromcsv(sys.argv[1])
 for i in range(min(csvparser.listfromkeyvalues(data, 'series')),
                max(csvparser.listfromkeyvalues(data, 'series'))+1):
     tmp = csvparser.listfromkeyvalues(data, 'rssi', series=i)
     if tmp:
-        print "Series", i
-        printlistevaluation(tmp)
+        print "Set", i
+        printlistevaluation(tmp, verbose=v)
         print
         if doPlots: plots_data.append(tmp)
 
