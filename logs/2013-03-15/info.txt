@@ -1,0 +1,7 @@
+m03-15.csv
+klar, -1°C
+25, 50 & 75m um die ecke
+
+m03-15.innen.csv
+25 & 50m
+25 & 40m um die ecke
