@@ -69,7 +69,8 @@ void led_write(unsigned char a) {
 int main(void) {
 	unsigned int b;
 	unsigned char c;
-	unsigned char rssi_ar[10];
+	unsigned char buf[127];
+	//unsigned char rssi_ar[10];
 	unsigned char i = 0, j = 0;
 	unsigned int rssi = 0;
 	
@@ -88,7 +89,8 @@ int main(void) {
 	
 	i2c_start_wait(0x70+I2C_WRITE);
 	i2c_write(0x01);
-	i2c_write(0x00);
+	i2c_write(0x3f);
+	i2c_write(0x3f);
 	i2c_stop();
 	
 	uart_init( UART_BAUD_SELECT(UART_BAUD_RATE,F_CPU) );
@@ -140,7 +142,11 @@ int main(void) {
             }
             
             c = (unsigned char) b;
-			rssi_ar[i] = c;
+			
+			if(c != 0) {
+			 led_write(c); 
+			}
+			/*rssi_ar[i] = c;
 			i++;
 			if (i>9) {
 			  rssi = 0;
@@ -151,7 +157,7 @@ int main(void) {
 			  rssi /= 8;
 			  led_write((unsigned char)rssi);
 			  i = 0;
-			}
+			}*/
 			
         }
     }

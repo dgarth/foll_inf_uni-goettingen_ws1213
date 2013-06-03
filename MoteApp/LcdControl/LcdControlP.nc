@@ -161,7 +161,7 @@ implementation
 			first_receive = TRUE;
 			lcd_present = FALSE;
 		}
-		call LcdControl.puts("Initialising...", 1);
+		call LcdControl.puts("\0", 1);
 		itoa(TOS_NODE_ID, node_id, 10);
 		call LcdControl.puts(node_id, 2);
 		if(!(call Alarm.isRunning()))
@@ -174,57 +174,23 @@ implementation
     
     command void LcdControl.puts(const char *s, uint8_t line_no)
     {
-    	char *line1 = disp_buf+1;
-    	char *line2 = disp_buf+18;
-    	char *line;
-    	uint8_t slen = 0;
-    	uint8_t i;
-    	
-    	if(first_send) {
-    		memset(disp_buf, 0, BUF_LEN);
-    		atomic {
-    			disp_buf[0] = LCD_CLEAR_LINE1;
-    			disp_buf[17] = LCD_CLEAR_LINE2;
-    			disp_buf[37] = LCD_BTRQ;
-    		}
-    		atomic first_send = FALSE;
-        }
-        
-        switch(line_no) {
-        	case 1:
-        		line = line1;
-        	break;
-        	case 2:
-        		line = line2;
-        	break;
-        	default:
-        		memcpy(line1, line2, 16);
-        		line = line2;
-        	break;
-        }
-        
-        slen = strlen(s);
-        if (slen>16)
-        	slen = 16;
-        
-        strncpy(line, s, slen);   
-        for(i=slen; i<16; i++)
-        	*(line+i) = 0;
+		memset(disp_buf, 0, BUF_LEN);
+    	disp_buf[0] = *s;
     }
 	
 	command void LcdControl.beep(void)
 	{
-		atomic disp_buf[34] = LCD_BEEP;
+		//atomic disp_buf[34] = LCD_BEEP;
 	}
 	
 	command void LcdControl.led0Toggle(void)
 	{
-		atomic disp_buf[35] = LCD_LED1;
+		//atomic disp_buf[35] = LCD_LED1;
 	}
 	
 	command void LcdControl.led1Toggle(void)
 	{
-		atomic disp_buf[36] = LCD_LED2;
+		//tomic disp_buf[36] = LCD_LED2;
 	}
 	
 

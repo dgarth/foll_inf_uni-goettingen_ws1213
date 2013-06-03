@@ -146,6 +146,8 @@ implementation {
 		
 		snprintf(linebuf1, 16, "N1:%u N2:%u M:%u", id1, id2, series_nr);
 		snprintf(linebuf2, 16, "P:%u R:%d", packet_nr, rssi);
+		linebuf2[0] = rssi;
+		linebuf1[0] = rssi;
 		
 		//LCD anschalten
 		call LcdControl.enable();
@@ -159,7 +161,7 @@ implementation {
 		//drucken wir einen Report drauf aus
 		if(r) {
 			r = FALSE;
-			call LcdControl.beep();
+			//call LcdControl.beep();
 			call LcdControl.puts(linebuf1, 1);
 			call LcdControl.puts(linebuf2, 2);
 			call LcdControl.disable();
