@@ -1,3 +1,9 @@
+.DS_Store
+*.lst
+*.sym
+*.hex
+*.eep
+*.o
 *.class
 *.pyc
 .*.swp
