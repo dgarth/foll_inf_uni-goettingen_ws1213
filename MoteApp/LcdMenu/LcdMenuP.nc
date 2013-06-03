@@ -166,8 +166,8 @@ implementation {
 			call LcdControl.puts(linebuf2, 2);
 			call LcdControl.disable();
 		} else if(c) {//oder den Anfang des Menues
-			call LcdControl.puts(linebuf1, 1);
-			call LcdControl.puts(linebuf2, 2);
+			//call LcdControl.puts(linebuf1, 1);
+			//call LcdControl.puts(linebuf2, 2);
 		}
 	}
 	
