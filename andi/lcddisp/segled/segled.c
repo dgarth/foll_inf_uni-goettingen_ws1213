@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <stdlib.h>
 #include "uart.h"
 #include "i2cmaster.h"
 
@@ -9,9 +10,68 @@
 #endif
 #define UART_BAUD_RATE      4800
 
+int cmpfunc (const void * a, const void * b)
+{
+  return ( *(unsigned char*)a - *(unsigned char*)b );
+}
+
+void led_write(unsigned char a) {
+  
+  unsigned char led_byte[2], b = 0, i = 0;
+  
+  while(i<2) {
+	b = a % 10;
+	a /= 10;
+	switch(b){
+	  case 0:
+		led_byte[i] = 0x3f;
+	  break;
+	  case 1:
+		led_byte[i] = 0x06;
+	  break;
+	  case 2:
+		led_byte[i] = 0x5b;
+	  break;
+	  case 3:
+		led_byte[i] = 0x4f;
+	  break;
+	  case 4:
+		led_byte[i] = 0x66;
+	  break;
+	  case 5:
+		led_byte[i] = 0x6d;
+	  break;
+	  case 6:
+		led_byte[i] = 0x7d;
+	  break;
+	  case 7:
+		led_byte[i] = 0x07;
+	  break;
+	  case 8:
+		led_byte[i] = 0x7f;
+	  break;
+	  case 9:
+		led_byte[i] = 0x6f;
+	  break;
+	  default:
+		led_byte[i] = 0x3f;
+	  break;
+	}
+	i++;
+  }
+  i2c_start_wait(0x70+I2C_WRITE);
+  i2c_write(0x01);
+  i2c_write(led_byte[1]);
+  i2c_write(led_byte[0]);
+  i2c_stop();
+}
+
 int main(void) {
 	unsigned int b;
 	unsigned char c;
+	unsigned char rssi_ar[10];
+	unsigned char i = 0, j = 0;
+	unsigned int rssi = 0;
 	
 	i2c_init();
 	i2c_start_wait(0x70+I2C_WRITE);
@@ -26,9 +86,14 @@ int main(void) {
 	i2c_write(0x46);
 	i2c_stop();
 	
+	i2c_start_wait(0x70+I2C_WRITE);
+	i2c_write(0x01);
+	i2c_write(0x00);
+	i2c_stop();
+	
 	uart_init( UART_BAUD_SELECT(UART_BAUD_RATE,F_CPU) );
     sei();
-    
+	
 	for(;;)
     {
         /*
@@ -75,12 +140,19 @@ int main(void) {
             }
             
             c = (unsigned char) b;
-            i2c_start_wait(0x70+I2C_WRITE);
-			i2c_write(0x01);
-			i2c_write(c);
-			i2c_write(c);
-			i2c_stop();
-            
+			rssi_ar[i] = c;
+			i++;
+			if (i>9) {
+			  rssi = 0;
+			  qsort(rssi_ar, 10, sizeof(unsigned char), cmpfunc);
+			  for(j = 1; j < 9; j++) {
+				rssi += rssi_ar[j];
+			  }
+			  rssi /= 8;
+			  led_write((unsigned char)rssi);
+			  i = 0;
+			}
+			
         }
     }
 	
